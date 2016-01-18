@@ -8,6 +8,8 @@ import array
 import numpy as n
 from Workspace.RA4Analysis.signalRegions import *
 
+print "BLA"
+
 regionToDPhi = {
   (5, 5) : {
     (250, 350) : {
@@ -168,7 +170,7 @@ signals = [
 #
 # prepare bins
 #
-procNames = [ "W", "tt", "other" ]
+procNames = [ "W", "tt", "other", "QCD" ]
 
 sbBinNames = [ ]
 sbBins = { }
@@ -225,20 +227,55 @@ for signal in signals[:1]:
     rDPhi += "DPhi"
     # observation
     y_truth = sbres["yW_crNJet_0b_"+rDPhi+"_truth"] + \
-        sbres["ytt_crNJet_0b_"+rDPhi+"_truth"] + \
+        sbres["yTT_crNJet_0b_"+rDPhi+"_truth"] + \
         sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
     c.specifyObservation(sbname,int(y_truth+0.5))
     # W
     if sbname[:2]=="J3":
-      pass
+      c.specifyExpectation(sbname,"W",sbres["y_crNJet_0b_"+rDPhi]-sbres["yTT_crNJet_0b_"+rDPhi])
+      c.specifyExpectation(sbname,"tt",sbres["yTT_crNJet_0b_"+rDPhi])
+      c.specifyExpectation(sbname,"other",0.0001)
+      c.specifyExpectation(sbname,"QCD",0.0001)
     # tt
     elif sbname[:2]=="J4":
-      c.specifyExpectation(sbname,"W",sbres["yW_crNJet_1b_"+rDPhi+"_truth"])
-      c.specifyExpectation(sbname,"W",sbres["yW_crNJet_1b_"+rDPhi+"_truth"])
+      c.specifyExpectation(sbname,"W",0.0001)
+      c.specifyExpectation(sbname,"tt",sbres["y_crNJet_1b_"+rDPhi])
+      c.specifyExpectation(sbname,"other",0.0001)
+      c.specifyExpectation(sbname,"QCD",0.0001)
       
 
   for mbname in mbBinNames:
     c.addBin(mbname,procNames,mbname)
+    mbres = res[mbBins[mbname][0]][mbBins[mbname][1]][mbBins[mbname][2]]
+    # low vs. high dphi
+    r = mbname[-2:]
+    if r=="CR":
+      rDPhi = "lowDPhi"
+      # observation
+      y_truth = mbres["yW_crNJet_0b_"+rDPhi+"_truth"] + \
+          mbres["yTT_crNJet_0b_"+rDPhi+"_truth"] + \
+          mbres["yRest_crNJet_0b_"+rDPhi+"_truth"] + \
+          mbres["yQCD_srNJet_0b_"+rDPhi+"_truth"]
+      c.specifyObservation(mbname,int(y_truth+0.5))
+      # expectation
+      c.specifyExpectation(mbname,"tt",mbres["yTT_srNJet_0b_"+rDPhi])
+      c.specifyExpectation(mbname,"W",mbres["yW_srNJet_0b_"+rDPhi])
+      c.specifyExpectation(mbname,"other",mbres["yRest_srNJet_0b_"+rDPhi+"_truth"])
+      # !!!!! to be changed
+      c.specifyExpectation(mbname,"QCD",0.0001)
+      # c.specifyExpectation(mbname,"QCD",mbres["yQCD_srNJet_0b"])
+    else:
+      rDPhi = "highDPhi"
+      # observation
+      y_truth = mbres["W_truth"] +  mbres["TT_truth"] + mbres["Rest_truth"]
+      c.specifyObservation(mbname,int(y_truth+0.5))
+      # expectation
+      c.specifyExpectation(mbname,"tt",mbres["TT_pred"])
+      c.specifyExpectation(mbname,"W",mbres["W_pred"])
+      c.specifyExpectation(mbname,"other",mbres["Rest_truth"])
+      c.specifyExpectation(mbname,"QCD",0.0001)
+
+    c.writeToFile("calc_limit.txt")
 
 sys.exit(0)
 #          bNameBase = "J"+str(njet(0)
