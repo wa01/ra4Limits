@@ -1,0 +1,42 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage{rotating}
+
+\begin{document}
+
+\newcommand{\tthat}{\ensuremath{\widehat{\mathrm{tt}}}}
+\newcommand{\what}{\ensuremath{\widehat{\mathrm{W}}}}
+
+\begin{table}
+\center
+\begin{tabular}{c||c|c}
+ & $\Delta\phi<x$ &  $\Delta\phi<x$ \\ \hline\hline
+MB & E & F \\ 
+SB(tt) & C & D \\
+SB(W) & A & B 
+\end{tabular}
+\caption{Letters for MB and SB regions.}
+\end{table}
+
+\begin{sidewaystable}
+\center
+\begin{tabular}{c||c|c|c|c}
+   & tt & W & EWK(other) & QCD \\ \hline\hline
+F & $\tthat = \frac{\tthat_E \tthat_D}{\tthat_C} \kappa_b \kappa_{tt} = \tthat_E R_{CS}^{tt}$ & 
+$\what_F = \frac{\what_E \what_D}{\what_C} \kappa_{W}$ & MC & QCD estimate == 0 \\ \hline
+  & {\it see below} & {\it see below} & Rest\_truth & 0  \\ \hline \hline
+E & $y_{fit}^{tt}$(E) & $y_{fit}^{W}$(E) & MC & QCD estimate (E) \\ \hline
+ & yTT\_srNJet\_0b\_lowDPhi & yW\_srNJet\_0b\_lowDPhi & yRest\_srNJet\_0b\_lowDPhi\_truth & yQCD\_srNJet\_0b\_lowDPhi \\ \hline \hline
+D & $N$(D) & MC & MC & QCD estimate ?? \\ \hline 
+ & y\_crNJet\_1b\_highDPhi & yW\_crNJet\_1b\_highDPhi\_truth & yRest\_crNJet\_1b\_highDPhi\_truth & yQCD\_crNJet\_1b\_highDPhi \\ \hline \hline
+C & $N$(C) & MC & MC & QCD estimate \\ \hline 
+ & y\_crNJet\_1b\_lowDPhi & yW\_crNJet\_1b\_lowDPhi\_truth & yRest\_crNJet\_1b\_lowDPhi\_truth & yQCD\_crNJet\_1b\_lowDPhi \\ \hline \hline
+B & $R_{CS}^{tt}(AB,\mu) y_{fit}^{tt}(A)$ & $N$(B)-\tthat(B) & MC & QCD estimate ? \\ 
+  & & (anticorr. with \tthat(B)) & & \\ \hline 
+  & yTT\_crNJet\_0b\_highDPhi & y\_crNJet\_0b\_highDPhi - others & yRest\_crNJet\_0b\_highDPhi\_truth & 0 \\ \hline \hline
+A & $y_{fit}^{tt}(A)$ & $N$(A)-\tthat(A) & MC & QCD estimate \\ 
+  & & (anticorr. with \tthat(B)) & & \\ \hline 
+  & yTT\_crNJet\_0b\_lowDPhi & y\_crNJet\_0b\_lowDPhi - others & yRest\_crNJet\_0b\_lowDPhi\_truth& 0 \\ \hline \hline
+\end{tabular}
+\end{sidewaystable}
+
+\end{document}
