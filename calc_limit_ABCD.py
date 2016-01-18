@@ -185,13 +185,13 @@ for njet in njetBins[:1]:
         continue
       dphiLimit = dphiLimitToLabel(regionToDPhi[njet][lt][ht])
       bNameBase = njetBinToLabel(njet) + ltBinToLabel(lt) + htBinToLabel(ht) + dphiLimit
-      for r in [ "CR", "SR" ]:
+      for r in [ "C", "S" ]:
         bName = bNameBase + r
         assert not bName in mbBinNames
         mbBinNames.append(bName)
         mbBins[bName] = ( njet, lt, ht )
         for sb in [ "W", "tt" ]:
-          if r=="CR":
+          if r=="C":
             continue
           if sb=="W":
             sbName = "J3"  + ltBinToLabel(lt) + htBinToLabel(ht) + dphiLimit + r
@@ -213,8 +213,10 @@ for signal in signals[:1]:
 
 
   c = cardFileWriter()
-  c.defWidth=12
-  c.precision=6
+  c.defWidth=10
+  c.precision=3
+  c.maxUncNameWidth = 17
+  c.maxUncStrWidth = 15
   #
   # define bins
   #
@@ -223,7 +225,7 @@ for signal in signals[:1]:
     sbres = res[sbBins[sbname][0]][sbBins[sbname][1]][sbBins[sbname][2]]
     # low vs. high dphi
     r = sbname[-2:]
-    rDPhi = "low" if r=="CR" else "high"
+    rDPhi = "low" if r=="C" else "high"
     rDPhi += "DPhi"
     # observation
     y_truth = sbres["yW_crNJet_0b_"+rDPhi+"_truth"] + \
@@ -232,16 +234,18 @@ for signal in signals[:1]:
     c.specifyObservation(sbname,int(y_truth+0.5))
     # W
     if sbname[:2]=="J3":
+      c.specifyExpectation(sbname,"signal",0.001)
       c.specifyExpectation(sbname,"W",sbres["y_crNJet_0b_"+rDPhi]-sbres["yTT_crNJet_0b_"+rDPhi])
       c.specifyExpectation(sbname,"tt",sbres["yTT_crNJet_0b_"+rDPhi])
-      c.specifyExpectation(sbname,"other",0.0001)
-      c.specifyExpectation(sbname,"QCD",0.0001)
+      c.specifyExpectation(sbname,"other",0.001)
+      c.specifyExpectation(sbname,"QCD",0.001)
     # tt
     elif sbname[:2]=="J4":
-      c.specifyExpectation(sbname,"W",0.0001)
+      c.specifyExpectation(sbname,"signal",0.001)
+      c.specifyExpectation(sbname,"W",0.001)
       c.specifyExpectation(sbname,"tt",sbres["y_crNJet_1b_"+rDPhi])
-      c.specifyExpectation(sbname,"other",0.0001)
-      c.specifyExpectation(sbname,"QCD",0.0001)
+      c.specifyExpectation(sbname,"other",0.001)
+      c.specifyExpectation(sbname,"QCD",0.001)
       
 
   for mbname in mbBinNames:
@@ -249,7 +253,7 @@ for signal in signals[:1]:
     mbres = res[mbBins[mbname][0]][mbBins[mbname][1]][mbBins[mbname][2]]
     # low vs. high dphi
     r = mbname[-2:]
-    if r=="CR":
+    if r=="C":
       rDPhi = "lowDPhi"
       # observation
       y_truth = mbres["yW_crNJet_0b_"+rDPhi+"_truth"] + \
@@ -258,11 +262,12 @@ for signal in signals[:1]:
           mbres["yQCD_srNJet_0b_"+rDPhi+"_truth"]
       c.specifyObservation(mbname,int(y_truth+0.5))
       # expectation
+      c.specifyExpectation(mbname,"signal",0.01)
       c.specifyExpectation(mbname,"tt",mbres["yTT_srNJet_0b_"+rDPhi])
       c.specifyExpectation(mbname,"W",mbres["yW_srNJet_0b_"+rDPhi])
       c.specifyExpectation(mbname,"other",mbres["yRest_srNJet_0b_"+rDPhi+"_truth"])
       # !!!!! to be changed
-      c.specifyExpectation(mbname,"QCD",0.0001)
+      c.specifyExpectation(mbname,"QCD",0.001)
       # c.specifyExpectation(mbname,"QCD",mbres["yQCD_srNJet_0b"])
     else:
       rDPhi = "highDPhi"
@@ -270,10 +275,33 @@ for signal in signals[:1]:
       y_truth = mbres["W_truth"] +  mbres["TT_truth"] + mbres["Rest_truth"]
       c.specifyObservation(mbname,int(y_truth+0.5))
       # expectation
+      c.specifyExpectation(mbname,"signal",1.)
       c.specifyExpectation(mbname,"tt",mbres["TT_pred"])
       c.specifyExpectation(mbname,"W",mbres["W_pred"])
       c.specifyExpectation(mbname,"other",mbres["Rest_truth"])
-      c.specifyExpectation(mbname,"QCD",0.0001)
+      c.specifyExpectation(mbname,"QCD",0.001)
+
+  for mbname in mbBinNames:
+    if not mbname.endswith("S"):
+      continue
+    # correlation W regions: B and F / E and F
+    uncName = "corrWBF" + mbname[:-1]
+    c.addUncertainty(uncName,"lnN")
+    c.specifyUncertainty(uncName,"J3"+mbname[2:-1]+"S","W",3.00)
+    c.specifyUncertainty(uncName,mbname,"W",3.00)
+    uncName = "corrWEF" + mbname[:-1]
+    c.addUncertainty(uncName,"lnN")
+    c.specifyUncertainty(uncName,mbname[:-1]+"C","W",3.00)
+    c.specifyUncertainty(uncName,mbname,"W",3.00)
+    # correlation tt regions: D and F / E and F
+    uncName = "corrTTDF" + mbname[:-1]
+    c.addUncertainty(uncName,"lnN")
+    c.specifyUncertainty(uncName,"J4"+mbname[2:-1]+"S","tt",3.00)
+    c.specifyUncertainty(uncName,mbname,"tt",3.00)
+    uncName = "corrTTEF" + mbname[:-1]
+    c.addUncertainty(uncName,"lnN")
+    c.specifyUncertainty(uncName,mbname[:-1]+"C","tt",3.00)
+    c.specifyUncertainty(uncName,mbname,"tt",3.00)
 
     c.writeToFile("calc_limit.txt")
 
