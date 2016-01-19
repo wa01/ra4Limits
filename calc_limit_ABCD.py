@@ -178,11 +178,11 @@ sbBinNames = [ ]
 sbBins = { }
 mbBinNames = [ ]
 mbBins = { }
-for njet in njetBins[:1]:
-  for lt in ltBins[:1]:
+for njet in njetBins[:]:
+  for lt in ltBins[:]:
     if not lt in res[njet]:
       continue
-    for ht in htBins[:1]:
+    for ht in htBins[:]:
       if not ht in res[njet][lt]:
         continue
       dphiLimit = dphiLimitToLabel(regionToDPhi[njet][lt][ht])
@@ -348,10 +348,6 @@ for signal in signals[:1]:
       c.specifyUncertainty(uncName,mbname[:-1]+"C","tt",3.00)
       c.specifyUncertainty(uncName,mbname,"tt",3.00)
       # anticorrelated W/tt yields from fit
-      uncName = "yWtt" + sbWnameS
-      c.addUncertainty(uncName,"lnN")
-      c.specifyUncertainty(uncName,sbWnameS,"W",relErrForLimit(sbWresS["yW_crNJet_0b_highDPhi"],sbWresS["yW_Var_crNJet_0b_highDPhi"]))
-      c.specifyUncertainty(uncName,sbWnameS,"tt",relErrForLimit(sbWresS["yTT_crNJet_0b_highDPhi"],sbWresS["yTT_Var_crNJet_0b_highDPhi"],-1))
       uncName = "yWtt" + mbnameC
       c.addUncertainty(uncName,"lnN")
       c.specifyUncertainty(uncName,mbnameC,"W",relErrForLimit(mbresC["yW_srNJet_0b_lowDPhi"],mbresC["yW_Var_srNJet_0b_lowDPhi"]))
@@ -364,18 +360,14 @@ for signal in signals[:1]:
 #      c.addUncertainty(uncName,"lnN")
 #      c.specifyUncertainty(uncName,mbname,"QCD",relErrForLimit(mbresC["yQCD_srNJet_0b_lowDPhi"],mbresC["yQCD_Var_srNJet_0b_lowDPhi"]))
 
-  #
-  # statistical uncertainty SB CRs
-  #
   for sbname in sbBinNames:
     sbres = res[sbBins[sbname][0]][sbBins[sbname][1]][sbBins[sbname][2]]
-    # observation
+    # statistical uncertainty SB CRs
     obs = c.observation[sbname]
     assert obs>0
     unc = 1. + 1./sqrt(obs)
     uncName = "stat" + sbname
     c.addUncertainty(uncName,"lnN")
-    print "*** ",uncName,unc
     for mbname in mbBinNames:
       if not mbname.endswith("S"):
         continue
@@ -383,6 +375,12 @@ for signal in signals[:1]:
         c.specifyUncertainty(uncName,mbname,"W",unc)
       elif "J4"+mbname[2:-1]+"C"==sbname:
         c.specifyUncertainty(uncName,mbname,"tt",unc)
+    # anticorrelated W/tt yields from fit
+    if sbname.startswith("J3"):
+      uncName = "yWtt" + sbname
+      c.addUncertainty(uncName,"lnN")
+      c.specifyUncertainty(uncName,sbname,"W",relErrForLimit(sbres["yW_crNJet_0b_highDPhi"],sbres["yW_Var_crNJet_0b_highDPhi"]))
+      c.specifyUncertainty(uncName,sbname,"tt",relErrForLimit(sbres["yTT_crNJet_0b_highDPhi"],sbres["yTT_Var_crNJet_0b_highDPhi"],-1))
 
   #
   # global normalization
@@ -404,82 +402,4 @@ for signal in signals[:1]:
 #    c.specifyUncertainty("lumi",bname,"other",1.046)
 
   c.writeToFile("calc_limit.txt")
-
-sys.exit(0)
-#          bNameBase = "J"+str(njet(0)
-#        c.addBin
-
-for signal in signals[:1]:
-  for njet in njetBins[:1]:
-    for lt in ltBins[:1]:
-      for ht in htBins[:1]:
-
-
-        found_bin.append(\
-        { #'closure': res[njet][lt][ht]['tot_clos']  ,
-            'Berror':res[njet][lt][ht]['tot_pred_err'] ,'B': res[njet][lt][ht]['tot_pred'], 'nJet': (6, 7), 'S1000': res[njet][lt][ht]['T5q^{4} 1.0/0.8/0.7_yield'], 'HT': ht, 'LT': lt, 'S1500': res[njet][lt][ht]['T5q^{4} 1.5/0.8/0.1_yield'], 'deltaPhi': 0.75, 'S1200': res[njet][lt][ht]['T5q^{4} 1.2/1.0/0.8_yield']},\
-                        )
-
-
-  print found_bin
-
-  x_s = n.zeros(11, dtype=float)
-  y_s = n.zeros(11, dtype=float)
-  y_1min = n.zeros(11, dtype=float)
-  y_2min = n.zeros(11, dtype=float)
-  y_1max = n.zeros(11, dtype=float)
-  y_2max = n.zeros(11, dtype=float)
-  for lum in lumi_bins:
-    print "lum:" , lum
-    print "lumi:" , lum*1000
-    #c.addUncertainty('Lumi', 'lnN')
-    #c.specifyFlatUncertainty('Lumi', 1.20)
-    c.addUncertainty('JES', 'lnN')
-    #c.addUncertainty('closure', 'lnN')
-    c.addUncertainty('predUnc', 'lnN')
-    c.addUncertainty('SigAcc', 'lnN')
-    for i , bin in enumerate(found_bin):
-      #print i ,bin['HT'],bin['LT'] ,bin['nJet'],bin['B'] , bin['S1500']
-
-      bkg_Y = { 'name': 'bin_'+str(i), 'value': float(bin['B'])/float(lumi_origin), 'label': 'ttJets+WJets'}
-
-      signal.update({'value': float(bin[signal['name']])/float(lumi_origin)})
-      #print signal
-
-      c.addBin(bkg_Y['name'], ['bkg'], bkg_Y['name'])
-
-
-      #print "Bin"+str(i), y
-      c.specifyObservation(bkg_Y['name'], int(signal['value']*lum))
-      c.specifyExpectation(bkg_Y['name'], 'bkg', bkg_Y['value']*lum)
-      c.specifyExpectation(bkg_Y['name'], 'signal', signal['value']*lum)
-
-      c.specifyUncertainty('JES', bkg_Y['name'], 'bkg', 1.2)
-      #c.specifyUncertainty('closure', bkg_Y['name'], 'bkg', 1+bin['closure'])
-      c.specifyUncertainty('predUnc', bkg_Y['name'], 'bkg', 1+bin['Berror'])
-      c.specifyUncertainty('SigAcc', bkg_Y['name'], 'signal', 1.2)
-    #####End of Bin loop######
-
-
-    if option == 'limit' :
-
-      limit = c.calcLimit()
-      print 'limit:' ,  limit
-      limit_med = limit['0.500']
-      print "limit median :" , limit_med
-      y_2min[int(lum)] = limit['0.025']
-      y_1min[int(lum)] = limit['0.160']
-      y_s[int(lum)]    = limit_med
-      y_1max[int(lum)] = limit['0.840']
-      y_2max[int(lum)] = limit['0.975']
-      x_s[int(lum)] = int(lum)
-
-
-  signal_signif.append({'label':signal['label'] ,'name':signal['name'],'color':signal['color'] , 'y_m':y_s[1:] , 'x': x_s[1:] , 'y1_min':y_1min[1:],'y2_min': y_2min[1:] ,'y1_max': y_1max[1:] ,'y2_max':y_2max[1:] })
-
-print signal_signif
-
-for signal in signal_signif:
-   plotLimit(signal,path,option+pdg+'_fullbin_'+str(lumi_origin),lumi_origin)
-
 
