@@ -1,14 +1,11 @@
 from cardFileWriter import cardFileWriter
-from limit_helper import plotsignif , plotLimit , signal_bins_3fb
+#from limit_helper import plotsignif , plotLimit , signal_bins_3fb
 from math import exp,sqrt
 import os,sys
 import ROOT
 import pickle
-import array
-import numpy as n
+#import array
 from Workspace.RA4Analysis.signalRegions import *
-
-print "BLA"
 
 regionToDPhi = {
   (5, 5) : {
@@ -125,11 +122,8 @@ lumi_bins = [1,2,3,4,5,6,7,8,9,10]
 lumi_origin = 3
 
 
-#bin_yields2 = pickle.load(file('/data/dspitzbart/lumi3.0yields_pkl_newOpt'))
-#bin_yields2 = pickle.load(file('/data/dspitzbart/lumi3.0yields_pkl_final'))
-#res = pickle.load(file('/data/easilar/PHYS14v3/withCSV/rCS_0b_3.0fbSlidingWcorrectionMuonChannel/singleLeptonic_Phys14V3__estimationResults_pkl_updated'))
-#res = pickle.load(file(os.path.expandvars("$WORK/susy/DataDspitzbartResults2015/Prediction_SFtemplates_fullSR_lep_data_2.1/resultsFinal_withSystematics_pkl")))
-res = pickle.load(file(os.path.expandvars("singleLeptonic_Spring15__estimationResults_pkl_kappa_corrected-150116.pkl")))
+#res = pickle.load(file(os.path.expandvars("singleLeptonic_Spring15__estimationResults_pkl_kappa_corrected-150116.pkl")))
+res = pickle.load(file(os.path.expandvars("resultsFinal_withSystematics_andSignals_150119.pkl")))
 
 #pdg = 'pos'
 #pdg = 'neg'
@@ -161,9 +155,9 @@ for ht in htBins:
   print htBinToLabel(ht)
 
 signals = [
-          {'color': ROOT.kBlue ,'name': 'S1500' ,'label': 'T5q^{4} 1.5/0.8/0.1'}, \
-          {'color': ROOT.kRed  ,'name': 'S1200' ,'label': 'T5q^{4} 1.2/1.0/0.8'}, \
-          {'color': ROOT.kBlack ,'name': 'S1000' ,'label': 'T5q^{4} 1.0/0.8/0.7'}, \
+          {'color': ROOT.kBlue ,'name': 's1500' ,'label': 'T5q^{4} 1.5/0.8/0.1'}, \
+          {'color': ROOT.kRed  ,'name': 's1200' ,'label': 'T5q^{4} 1.2/1.0/0.8'}, \
+          {'color': ROOT.kBlack ,'name': 's1000' ,'label': 'T5q^{4} 1.0/0.85/0.7'}, \
          ]
 
 #signal = signals[2]
@@ -178,11 +172,11 @@ sbBinNames = [ ]
 sbBins = { }
 mbBinNames = [ ]
 mbBins = { }
-for njet in njetBins[:]:
-  for lt in ltBins[:]:
+for njet in njetBins[:1]:
+  for lt in ltBins[:1]:
     if not lt in res[njet]:
       continue
-    for ht in htBins[:]:
+    for ht in htBins[:1]:
       if not ht in res[njet][lt]:
         continue
       dphiLimit = dphiLimitToLabel(regionToDPhi[njet][lt][ht])
@@ -209,7 +203,6 @@ for njet in njetBins[:]:
 print mbBinNames
 print sbBinNames                
 
-signal_signif = []
 for signal in signals[:1]:
   print signal
 
@@ -248,7 +241,10 @@ for signal in signals[:1]:
           sbres["yTT_crNJet_0b_"+rDPhi+"_truth"] + \
           sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
       c.specifyObservation(sbname,int(y_truth+0.5))
-      c.specifyExpectation(sbname,"signal",0.001)
+      if sbname.endswith("S"):  # need to include also CR yields
+        c.specifyExpectation(sbname,"signal",sbres["signals"][signal["name"]]['yield'])
+      else:
+        c.specifyExpectation(sbname,"signal",0.)
 #      c.specifyExpectation(sbname,"W",sbres["y_crNJet_0b_"+rDPhi]-sbres["yTT_crNJet_0b_"+rDPhi])
       c.specifyExpectation(sbname,"W",sbres["yW_crNJet_0b_"+rDPhi])
       c.specifyExpectation(sbname,"tt",sbres["yTT_crNJet_0b_"+rDPhi])
@@ -261,7 +257,10 @@ for signal in signals[:1]:
           sbres["yTT_crNJet_1b_"+rDPhi+"_truth"] + \
           sbres["yRest_crNJet_1b_"+rDPhi+"_truth"]
       c.specifyObservation(sbname,int(y_truth+0.5))
-      c.specifyExpectation(sbname,"signal",0.001)
+      if sbname.endswith("S"):  # need to include also CR yields
+        c.specifyExpectation(sbname,"signal",sbres["signals"][signal["name"]]['yield'])
+      else:
+        c.specifyExpectation(sbname,"signal",0.)
       c.specifyExpectation(sbname,"W",0.001)
       c.specifyExpectation(sbname,"tt",sbres["y_crNJet_1b_"+rDPhi])
       c.specifyExpectation(sbname,"other",0.001) # others are neglected in yield
@@ -271,7 +270,8 @@ for signal in signals[:1]:
 #      # low DPhi
 #      uncName = "yQCD" + sbname
 #      c.addUncertainty(uncName,"lnN")
-#      c.specifyUncertainty(uncName,sbname,"QCD",relErrForLimit(sbres["yQCD_crNJet_0b_lowDPhi"],sbres["yQCD_Var_crNJet_0b_lowDPhi"]))
+#      c.specifyUncertainty(uncName,sbname,"QCD",relErrForLimit(sbres["yQCD_crNJet_0b_lowDPhi"],\
+#         sbres["yQCD_Var_crNJet_0b_lowDPhi"]))
 
       
 
@@ -289,7 +289,7 @@ for signal in signals[:1]:
           mbres["yQCD_srNJet_0b_"+rDPhi+"_truth"]
       c.specifyObservation(mbname,int(y_truth+0.5))
       # expectation
-      c.specifyExpectation(mbname,"signal",0.01)
+      c.specifyExpectation(mbname,"signal",mbres["signals"][signal["name"]]['yield']) # to be corrected!
       c.specifyExpectation(mbname,"tt",mbres["yTT_srNJet_0b_"+rDPhi])
       c.specifyExpectation(mbname,"W",mbres["yW_srNJet_0b_"+rDPhi])
       c.specifyExpectation(mbname,"other",mbres["yRest_srNJet_0b_"+rDPhi+"_truth"])
@@ -302,7 +302,7 @@ for signal in signals[:1]:
       y_truth = mbres["W_truth"] +  mbres["TT_truth"] + mbres["Rest_truth"]
       c.specifyObservation(mbname,int(y_truth+0.5))
       # expectation
-      c.specifyExpectation(mbname,"signal",1.)
+      c.specifyExpectation(mbname,"signal",mbres["signals"][signal["name"]]['yield']) # to be corrected!
       c.specifyExpectation(mbname,"tt",mbres["TT_pred"])
       c.specifyExpectation(mbname,"W",mbres["W_pred"])
       c.specifyExpectation(mbname,"other",mbres["Rest_truth"])
@@ -366,7 +366,7 @@ for signal in signals[:1]:
     obs = c.observation[sbname]
     assert obs>0
     unc = 1. + 1./sqrt(obs)
-    uncName = "stat" + sbname
+    uncName = "stat" + sbname[:-1] + "C"
     c.addUncertainty(uncName,"lnN")
     for mbname in mbBinNames:
       if not mbname.endswith("S"):
@@ -379,8 +379,10 @@ for signal in signals[:1]:
     if sbname.startswith("J3"):
       uncName = "yWtt" + sbname
       c.addUncertainty(uncName,"lnN")
-      c.specifyUncertainty(uncName,sbname,"W",relErrForLimit(sbres["yW_crNJet_0b_highDPhi"],sbres["yW_Var_crNJet_0b_highDPhi"]))
-      c.specifyUncertainty(uncName,sbname,"tt",relErrForLimit(sbres["yTT_crNJet_0b_highDPhi"],sbres["yTT_Var_crNJet_0b_highDPhi"],-1))
+      c.specifyUncertainty(uncName,sbname,"W",relErrForLimit(sbres["yW_crNJet_0b_highDPhi"], 
+                                                             sbres["yW_Var_crNJet_0b_highDPhi"]))
+      c.specifyUncertainty(uncName,sbname,"tt",relErrForLimit(sbres["yTT_crNJet_0b_highDPhi"], \
+                                                                sbres["yTT_Var_crNJet_0b_highDPhi"],-1))
 
   #
   # global normalization
@@ -402,4 +404,22 @@ for signal in signals[:1]:
 #    c.specifyUncertainty("lumi",bname,"other",1.046)
 
   c.writeToFile("calc_limit.txt")
-
+  #
+  # comments
+  #
+  txt = open("calc_limit.txt","a")
+  txt.write("#\n")
+  txt.write("# List of uncertainties\n")
+  txt.write("#\n")
+  txt.write("# corrWBFJxLyHzDu ... correlation W: SB/highDPhi with MB/highDPhi\n")
+  txt.write("# corrWEFJxLyHzDu ... correlation W: MB/lowDPhi with MB/highDPhi\n")
+  txt.write("# corrTTDFJxLyHzDu .. correlation tt: SB/highDPhi with MB/highDPhi\n")
+  txt.write("# corrTTEFJxLyHzDu .. correlation tt: MB/lowDPhi with MB/highDPhi\n")
+  txt.write("# yWttJxLyHzDuC ..... anti-correlated W/tt fraction fit systematics in MB CR\n")
+  txt.write("# yQCDJxLyHzDuC ..... uncertainty QCD estimate in MB CR\n")
+  txt.write("# statJ[34]LyHzDuC .. stat. uncertainty from yield in SB lowDPhi \n")
+  txt.write("# yWttJ[34]LyHzDuS .. anti-correlated W/tt fraction fit systematics in W SB highDPhi\n")
+  txt.write("# yWttJ[34]LyHzDuC ?? anti-correlated W/tt fraction fit systematics in W SB lowDPhi\n")
+  txt.write("# lumi .............. luminosity\n")
+  txt.write("# sigSyst ........... approximated total signal systematics")
+  txt.close()
