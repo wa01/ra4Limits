@@ -241,13 +241,13 @@ for signal in signals[:1]:
     wVar = sbres["y_Var_crNJet_0b_"+rDPhi] + sbres["yTT_Var_crNJet_0b_"+rDPhi] # others are neglected in yield
     sbres["yW_Var_crNJet_0b_"+rDPhi] = wVar
     
-    # observation
-    y_truth = sbres["yW_crNJet_0b_"+rDPhi+"_truth"] + \
-        sbres["yTT_crNJet_0b_"+rDPhi+"_truth"] + \
-        sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
-    c.specifyObservation(sbname,int(y_truth+0.5))
     # W
     if sbname[:2]=="J3":
+      # observation
+      y_truth = sbres["yW_crNJet_0b_"+rDPhi+"_truth"] + \
+          sbres["yTT_crNJet_0b_"+rDPhi+"_truth"] + \
+          sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
+      c.specifyObservation(sbname,int(y_truth+0.5))
       c.specifyExpectation(sbname,"signal",0.001)
 #      c.specifyExpectation(sbname,"W",sbres["y_crNJet_0b_"+rDPhi]-sbres["yTT_crNJet_0b_"+rDPhi])
       c.specifyExpectation(sbname,"W",sbres["yW_crNJet_0b_"+rDPhi])
@@ -256,6 +256,11 @@ for signal in signals[:1]:
       c.specifyExpectation(sbname,"QCD",0.001)
     # tt
     elif sbname[:2]=="J4":
+      # observation
+      y_truth = sbres["yW_crNJet_1b_"+rDPhi+"_truth"] + \
+          sbres["yTT_crNJet_1b_"+rDPhi+"_truth"] + \
+          sbres["yRest_crNJet_1b_"+rDPhi+"_truth"]
+      c.specifyObservation(sbname,int(y_truth+0.5))
       c.specifyExpectation(sbname,"signal",0.001)
       c.specifyExpectation(sbname,"W",0.001)
       c.specifyExpectation(sbname,"tt",sbres["y_crNJet_1b_"+rDPhi])
@@ -278,9 +283,9 @@ for signal in signals[:1]:
     if r=="C":
       rDPhi = "lowDPhi"
       # observation
-      y_truth = mbres["yW_crNJet_0b_"+rDPhi+"_truth"] + \
-          mbres["yTT_crNJet_0b_"+rDPhi+"_truth"] + \
-          mbres["yRest_crNJet_0b_"+rDPhi+"_truth"] + \
+      y_truth = mbres["yW_srNJet_0b_"+rDPhi+"_truth"] + \
+          mbres["yTT_srNJet_0b_"+rDPhi+"_truth"] + \
+          mbres["yRest_srNJet_0b_"+rDPhi+"_truth"] + \
           mbres["yQCD_srNJet_0b_"+rDPhi+"_truth"]
       c.specifyObservation(mbname,int(y_truth+0.5))
       # expectation
@@ -358,6 +363,26 @@ for signal in signals[:1]:
 #      uncName = "yQCD" + mbname
 #      c.addUncertainty(uncName,"lnN")
 #      c.specifyUncertainty(uncName,mbname,"QCD",relErrForLimit(mbresC["yQCD_srNJet_0b_lowDPhi"],mbresC["yQCD_Var_srNJet_0b_lowDPhi"]))
+
+  #
+  # statistical uncertainty SB CRs
+  #
+  for sbname in sbBinNames:
+    sbres = res[sbBins[sbname][0]][sbBins[sbname][1]][sbBins[sbname][2]]
+    # observation
+    obs = c.observation[sbname]
+    assert obs>0
+    unc = 1. + 1./sqrt(obs)
+    uncName = "stat" + sbname
+    c.addUncertainty(uncName,"lnN")
+    print "*** ",uncName,unc
+    for mbname in mbBinNames:
+      if not mbname.endswith("S"):
+        continue
+      if "J3"+mbname[2:-1]+"C"==sbname:
+        c.specifyUncertainty(uncName,mbname,"W",unc)
+      elif "J4"+mbname[2:-1]+"C"==sbname:
+        c.specifyUncertainty(uncName,mbname,"tt",unc)
 
   #
   # global normalization
