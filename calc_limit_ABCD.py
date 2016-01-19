@@ -1,6 +1,6 @@
 from cardFileWriter import cardFileWriter
 from limit_helper import plotsignif , plotLimit , signal_bins_3fb
-from math import exp
+from math import exp,sqrt
 import os,sys
 import ROOT
 import pickle
@@ -98,7 +98,9 @@ def htBinToLabel(htBin):
   return "H"+str(idxs[0])
 #  return "H"+"".join([str(x) for x in range(idxs[0],idxs[1])])
 
-
+def relErrForLimit(value,variance,sign=1):
+  return 1.+sign*sqrt(variance)/value
+  
 ROOT.gROOT.LoadMacro("$CMSSW_BASE/src/Workspace/HEPHYPythonTools/scripts/root/tdrstyle.C")
 ROOT.setTDRStyle()
 
@@ -227,6 +229,18 @@ for signal in signals[:1]:
     r = sbname[-2:]
     rDPhi = "low" if r=="C" else "high"
     rDPhi += "DPhi"
+    # calculate missing numbers
+    # yield (W) = observed - estimated tt - EWK(other)
+    # wYield = sbres["y_crNJet_0b_"+rDPhi] - sbres["yTT_crNJet_0b_"+rDPhi] - \
+    #    sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
+    wYield = sbres["y_crNJet_0b_"+rDPhi] - sbres["yTT_crNJet_0b_"+rDPhi] # others are neglected in yield
+    sbres["yW_crNJet_0b_"+rDPhi] = wYield
+    # error on wYield
+    # wVar = sbres["y_Var_crNJet_0b_"+rDPhi] + sbres["yTT_Var_crNJet_0b_"+rDPhi] + \
+    #    sbres["yRest_Var_crNJet_0b_"+rDPhi+"_truth"]
+    wVar = sbres["y_Var_crNJet_0b_"+rDPhi] + sbres["yTT_Var_crNJet_0b_"+rDPhi] # others are neglected in yield
+    sbres["yW_Var_crNJet_0b_"+rDPhi] = wVar
+    
     # observation
     y_truth = sbres["yW_crNJet_0b_"+rDPhi+"_truth"] + \
         sbres["yTT_crNJet_0b_"+rDPhi+"_truth"] + \
@@ -235,16 +249,17 @@ for signal in signals[:1]:
     # W
     if sbname[:2]=="J3":
       c.specifyExpectation(sbname,"signal",0.001)
-      c.specifyExpectation(sbname,"W",sbres["y_crNJet_0b_"+rDPhi]-sbres["yTT_crNJet_0b_"+rDPhi])
+#      c.specifyExpectation(sbname,"W",sbres["y_crNJet_0b_"+rDPhi]-sbres["yTT_crNJet_0b_"+rDPhi])
+      c.specifyExpectation(sbname,"W",sbres["yW_crNJet_0b_"+rDPhi])
       c.specifyExpectation(sbname,"tt",sbres["yTT_crNJet_0b_"+rDPhi])
-      c.specifyExpectation(sbname,"other",0.001)
+      c.specifyExpectation(sbname,"other",0.001) # others are neglected in yield
       c.specifyExpectation(sbname,"QCD",0.001)
     # tt
     elif sbname[:2]=="J4":
       c.specifyExpectation(sbname,"signal",0.001)
       c.specifyExpectation(sbname,"W",0.001)
       c.specifyExpectation(sbname,"tt",sbres["y_crNJet_1b_"+rDPhi])
-      c.specifyExpectation(sbname,"other",0.001)
+      c.specifyExpectation(sbname,"other",0.001) # others are neglected in yield
       c.specifyExpectation(sbname,"QCD",0.001)
       
 
@@ -284,6 +299,24 @@ for signal in signals[:1]:
   for mbname in mbBinNames:
     if not mbname.endswith("S"):
       continue
+    mbnameBase = mbname[:-1]
+    mbnameC = mbnameBase + "C"
+    mbresC = res[mbBins[mbnameC][0]][mbBins[mbnameC][1]][mbBins[mbnameC][2]]
+    mbnameS = mbnameBase + "S"
+    mbresS = res[mbBins[mbnameS][0]][mbBins[mbnameS][1]][mbBins[mbnameS][2]]
+
+    sbWnameBase = "J3" + mbnameBase[2:]
+    # sbWnameC = sbWnameBase + "C"
+    # sbWresC = res[sbBins[sbWnameC][0]][sbBins[sbWnameC][1]][sbBins[sbWnameC][2]]
+    sbWnameS = sbWnameBase + "S"
+    sbWresS = res[sbBins[sbWnameS][0]][sbBins[sbWnameS][1]][sbBins[sbWnameS][2]]
+
+    sbttnameBase = "J4" + mbnameBase[2:]
+    # sbttnameC = sbttnameBase + "C"
+    # sbttresC = res[sbBins[sbttnameC][0]][sbBins[sbttnameC][1]][sbBins[sbttnameC][2]]
+    sbttnameS = sbttnameBase + "S"
+    sbttresS = res[sbBins[sbttnameS][0]][sbBins[sbttnameS][1]][sbBins[sbttnameS][2]]
+
     # correlation W regions: B and F / E and F
     uncName = "corrWBF" + mbname[:-1]
     c.addUncertainty(uncName,"lnN")
@@ -302,8 +335,26 @@ for signal in signals[:1]:
     c.addUncertainty(uncName,"lnN")
     c.specifyUncertainty(uncName,mbname[:-1]+"C","tt",3.00)
     c.specifyUncertainty(uncName,mbname,"tt",3.00)
+    # anticorrelated W/tt yields from fit
+    uncName = "yWtt" + sbWnameS
+    c.addUncertainty(uncName,"lnN")
+    c.specifyUncertainty(uncName,sbWnameS,"W",relErrForLimit(sbWresS["yW_crNJet_0b_highDPhi"],sbWresS["yW_Var_crNJet_0b_highDPhi"]))
+    c.specifyUncertainty(uncName,sbWnameS,"tt",relErrForLimit(sbWresS["yTT_crNJet_0b_highDPhi"],sbWresS["yTT_Var_crNJet_0b_highDPhi"],-1))
+    uncName = "yWtt" + mbnameC
+    c.addUncertainty(uncName,"lnN")
+    c.specifyUncertainty(uncName,mbnameC,"W",relErrForLimit(mbresC["yW_srNJet_0b_lowDPhi"],mbresC["yW_Var_srNJet_0b_lowDPhi"]))
+    c.specifyUncertainty(uncName,mbnameC,"tt",relErrForLimit(mbresC["yTT_srNJet_0b_lowDPhi"],mbresC["yTT_Var_srNJet_0b_lowDPhi"],-1))
+  #
+  # global normalization
+  #
+  c.addUncertainty("lumi","lnN")
+  c.addUncertainty("sigSyst","lnN")
+  for bname in sbBinNames+mbBinNames:
+    c.specifyUncertainty("lumi",bname,"signal",1.046)
+    c.specifyUncertainty("sigSyst",bname,"signal",1.20)
+    c.specifyUncertainty("lumi",bname,"other",1.046)
 
-    c.writeToFile("calc_limit.txt")
+  c.writeToFile("calc_limit.txt")
 
 sys.exit(0)
 #          bNameBase = "J"+str(njet(0)
