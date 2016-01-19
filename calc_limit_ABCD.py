@@ -297,8 +297,6 @@ for signal in signals[:1]:
       c.specifyExpectation(mbname,"QCD",0.001)
 
   for mbname in mbBinNames:
-    if not mbname.endswith("S"):
-      continue
     mbnameBase = mbname[:-1]
     mbnameC = mbnameBase + "C"
     mbresC = res[mbBins[mbnameC][0]][mbBins[mbnameC][1]][mbBins[mbnameC][2]]
@@ -317,33 +315,43 @@ for signal in signals[:1]:
     sbttnameS = sbttnameBase + "S"
     sbttresS = res[sbBins[sbttnameS][0]][sbBins[sbttnameS][1]][sbBins[sbttnameS][2]]
 
-    # correlation W regions: B and F / E and F
-    uncName = "corrWBF" + mbname[:-1]
-    c.addUncertainty(uncName,"lnN")
-    c.specifyUncertainty(uncName,"J3"+mbname[2:-1]+"S","W",3.00)
-    c.specifyUncertainty(uncName,mbname,"W",3.00)
-    uncName = "corrWEF" + mbname[:-1]
-    c.addUncertainty(uncName,"lnN")
-    c.specifyUncertainty(uncName,mbname[:-1]+"C","W",3.00)
-    c.specifyUncertainty(uncName,mbname,"W",3.00)
-    # correlation tt regions: D and F / E and F
-    uncName = "corrTTDF" + mbname[:-1]
-    c.addUncertainty(uncName,"lnN")
-    c.specifyUncertainty(uncName,"J4"+mbname[2:-1]+"S","tt",3.00)
-    c.specifyUncertainty(uncName,mbname,"tt",3.00)
-    uncName = "corrTTEF" + mbname[:-1]
-    c.addUncertainty(uncName,"lnN")
-    c.specifyUncertainty(uncName,mbname[:-1]+"C","tt",3.00)
-    c.specifyUncertainty(uncName,mbname,"tt",3.00)
-    # anticorrelated W/tt yields from fit
-    uncName = "yWtt" + sbWnameS
-    c.addUncertainty(uncName,"lnN")
-    c.specifyUncertainty(uncName,sbWnameS,"W",relErrForLimit(sbWresS["yW_crNJet_0b_highDPhi"],sbWresS["yW_Var_crNJet_0b_highDPhi"]))
-    c.specifyUncertainty(uncName,sbWnameS,"tt",relErrForLimit(sbWresS["yTT_crNJet_0b_highDPhi"],sbWresS["yTT_Var_crNJet_0b_highDPhi"],-1))
-    uncName = "yWtt" + mbnameC
-    c.addUncertainty(uncName,"lnN")
-    c.specifyUncertainty(uncName,mbnameC,"W",relErrForLimit(mbresC["yW_srNJet_0b_lowDPhi"],mbresC["yW_Var_srNJet_0b_lowDPhi"]))
-    c.specifyUncertainty(uncName,mbnameC,"tt",relErrForLimit(mbresC["yTT_srNJet_0b_lowDPhi"],mbresC["yTT_Var_srNJet_0b_lowDPhi"],-1))
+    if mbname.endswith("S"):
+
+      # correlation W regions: B and F / E and F
+      uncName = "corrWBF" + mbname[:-1]
+      c.addUncertainty(uncName,"lnN")
+      c.specifyUncertainty(uncName,"J3"+mbname[2:-1]+"S","W",3.00)
+      c.specifyUncertainty(uncName,mbname,"W",3.00)
+      uncName = "corrWEF" + mbname[:-1]
+      c.addUncertainty(uncName,"lnN")
+      c.specifyUncertainty(uncName,mbname[:-1]+"C","W",3.00)
+      c.specifyUncertainty(uncName,mbname,"W",3.00)
+      # correlation tt regions: D and F / E and F
+      uncName = "corrTTDF" + mbname[:-1]
+      c.addUncertainty(uncName,"lnN")
+      c.specifyUncertainty(uncName,"J4"+mbname[2:-1]+"S","tt",3.00)
+      c.specifyUncertainty(uncName,mbname,"tt",3.00)
+      uncName = "corrTTEF" + mbname[:-1]
+      c.addUncertainty(uncName,"lnN")
+      c.specifyUncertainty(uncName,mbname[:-1]+"C","tt",3.00)
+      c.specifyUncertainty(uncName,mbname,"tt",3.00)
+      # anticorrelated W/tt yields from fit
+      uncName = "yWtt" + sbWnameS
+      c.addUncertainty(uncName,"lnN")
+      c.specifyUncertainty(uncName,sbWnameS,"W",relErrForLimit(sbWresS["yW_crNJet_0b_highDPhi"],sbWresS["yW_Var_crNJet_0b_highDPhi"]))
+      c.specifyUncertainty(uncName,sbWnameS,"tt",relErrForLimit(sbWresS["yTT_crNJet_0b_highDPhi"],sbWresS["yTT_Var_crNJet_0b_highDPhi"],-1))
+      uncName = "yWtt" + mbnameC
+      c.addUncertainty(uncName,"lnN")
+      c.specifyUncertainty(uncName,mbnameC,"W",relErrForLimit(mbresC["yW_srNJet_0b_lowDPhi"],mbresC["yW_Var_srNJet_0b_lowDPhi"]))
+      c.specifyUncertainty(uncName,mbnameC,"tt",relErrForLimit(mbresC["yTT_srNJet_0b_lowDPhi"],mbresC["yTT_Var_srNJet_0b_lowDPhi"],-1))
+
+    else:
+      pass
+#      # low DPhi
+#      uncName = "yQCD" + mbname
+#      c.addUncertainty(uncName,"lnN")
+#      c.specifyUncertainty(uncName,mbname,"QCD",relErrForLimit(mbresC["yQCD_srNJet_0b_lowDPhi"],mbresC["yQCD_Var_srNJet_0b_lowDPhi"]))
+
   #
   # global normalization
   #
@@ -353,6 +361,15 @@ for signal in signals[:1]:
     c.specifyUncertainty("lumi",bname,"signal",1.046)
     c.specifyUncertainty("sigSyst",bname,"signal",1.20)
     c.specifyUncertainty("lumi",bname,"other",1.046)
+  #
+  # QCD
+  #
+#  for bname in mbBinNames:
+#    if bname.endswith("C"):
+#      c.addUncertainty(uncName,"lnN")
+#      c.specifyUncertainty(uncName,bname,"QCD",relErrForLimit()
+#    c.specifyUncertainty("sigSyst",bname,"signal",1.20)
+#    c.specifyUncertainty("lumi",bname,"other",1.046)
 
   c.writeToFile("calc_limit.txt")
 
