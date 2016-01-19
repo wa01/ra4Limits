@@ -261,6 +261,13 @@ for signal in signals[:1]:
       c.specifyExpectation(sbname,"tt",sbres["y_crNJet_1b_"+rDPhi])
       c.specifyExpectation(sbname,"other",0.001) # others are neglected in yield
       c.specifyExpectation(sbname,"QCD",0.001)
+    if sbname.endswith("C"):
+      pass
+#      # low DPhi
+#      uncName = "yQCD" + sbname
+#      c.addUncertainty(uncName,"lnN")
+#      c.specifyUncertainty(uncName,sbname,"QCD",relErrForLimit(sbres["yQCD_crNJet_0b_lowDPhi"],sbres["yQCD_Var_crNJet_0b_lowDPhi"]))
+
       
 
   for mbname in mbBinNames:
