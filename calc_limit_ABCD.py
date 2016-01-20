@@ -168,6 +168,19 @@ signals = [
 #
 procNames = [ "W", "tt", "other", "QCD" ]
 
+#nbins = 0
+#for njet in njetBins[:]:
+#  for lt in ltBins[:]:
+#    if not lt in res[njet]:
+#      continue
+#    for ht in htBins[:]:
+#      if not ht in res[njet][lt]:
+#        continue
+#      nbins += 1
+
+if os.path.exists("results.log"):
+  os.system("rm results.log; touch results.log")
+
 sbBinNames = [ ]
 sbBins = { }
 mbBinNames = [ ]
@@ -233,7 +246,7 @@ for signal in signals[:1]:
     #    sbres["yRest_Var_crNJet_0b_"+rDPhi+"_truth"]
     wVar = sbres["y_Var_crNJet_0b_"+rDPhi] + sbres["yTT_Var_crNJet_0b_"+rDPhi] # others are neglected in yield
     sbres["yW_Var_crNJet_0b_"+rDPhi] = wVar
-    
+
     # W
     if sbname[:2]=="J3":
       # observation
@@ -273,7 +286,6 @@ for signal in signals[:1]:
 #      c.specifyUncertainty(uncName,sbname,"QCD",relErrForLimit(sbres["yQCD_crNJet_0b_lowDPhi"],\
 #         sbres["yQCD_Var_crNJet_0b_lowDPhi"]))
 
-      
 
   for mbname in mbBinNames:
     c.addBin(mbname,procNames,mbname)
@@ -307,6 +319,17 @@ for signal in signals[:1]:
       c.specifyExpectation(mbname,"W",mbres["W_pred"])
       c.specifyExpectation(mbname,"other",mbres["Rest_truth"])
       c.specifyExpectation(mbname,"QCD",0.001)
+
+  #
+  # global uncertainties
+  #
+  c.addUncertainty("btag","lnN")
+  c.addUncertainty("lumi","lnN")
+  c.addUncertainty("sigSyst","lnN")
+  for bname in sbBinNames+mbBinNames:
+    c.specifyUncertainty("lumi",bname,"signal",1.046)
+    c.specifyUncertainty("sigSyst",bname,"signal",1.20) # to be corrected!
+    c.specifyUncertainty("lumi",bname,"other",1.046)
 
   for mbname in mbBinNames:
     mbnameBase = mbname[:-1]
@@ -352,6 +375,19 @@ for signal in signals[:1]:
       c.addUncertainty(uncName,"lnN")
       c.specifyUncertainty(uncName,mbnameC,"W",relErrForLimit(mbresC["yW_srNJet_0b_lowDPhi"],mbresC["yW_Var_srNJet_0b_lowDPhi"]))
       c.specifyUncertainty(uncName,mbnameC,"tt",relErrForLimit(mbresC["yTT_srNJet_0b_lowDPhi"],mbresC["yTT_Var_srNJet_0b_lowDPhi"],-1))
+      # uncertainty on kappas
+      uncName = "kappa" + mbnameS
+      c.addUncertainty(uncName,"lnN")
+      c.specifyUncertainty(uncName,mbnameS,"W",1.25) # to be corrected!
+      c.specifyUncertainty(uncName,mbnameS,"tt",1.25) # to be corrected!
+      # uncertainty on RCS_W (e+mu)/mu
+      uncName = "rcsWemu" + mbnameS
+      c.addUncertainty(uncName,"lnN")
+      c.specifyUncertainty(uncName,mbnameS,"W",1.05) # to be corrected!
+      # uncertainty on b tagging
+      c.specifyUncertainty("btag",mbnameS,"W",1.05) # to be corrected!
+      c.specifyUncertainty("btag",mbnameS,"W",1.05) # to be corrected!
+      c.specifyUncertainty("btag",mbnameS,"other",1.05) # to be corrected!
 
     else:
       pass
@@ -385,15 +421,6 @@ for signal in signals[:1]:
                                                                 sbres["yTT_Var_crNJet_0b_highDPhi"],-1))
 
   #
-  # global normalization
-  #
-  c.addUncertainty("lumi","lnN")
-  c.addUncertainty("sigSyst","lnN")
-  for bname in sbBinNames+mbBinNames:
-    c.specifyUncertainty("lumi",bname,"signal",1.046)
-    c.specifyUncertainty("sigSyst",bname,"signal",1.20)
-    c.specifyUncertainty("lumi",bname,"other",1.046)
-  #
   # QCD
   #
 #  for bname in mbBinNames:
@@ -423,3 +450,9 @@ for signal in signals[:1]:
   txt.write("# lumi .............. luminosity\n")
   txt.write("# sigSyst ........... approximated total signal systematics")
   txt.close()
+
+  stdout = sys.stdout
+  sys.stdout = open("results.log","a")
+  print 'Result ',mbBinNames[0]," , ",signal["name"]," : ",c.calcLimit(options="--run blind")
+  sys.stdout.close()
+  sys.stdout = stdout
