@@ -123,7 +123,8 @@ lumi_origin = 3
 
 
 #res = pickle.load(file(os.path.expandvars("singleLeptonic_Spring15__estimationResults_pkl_kappa_corrected-150116.pkl")))
-res = pickle.load(file(os.path.expandvars("resultsFinal_withSystematics_andSignals_150119.pkl")))
+sigres = pickle.load(file(os.path.expandvars("resultsFinal_withSystematics_andSignals_NewStructure_150120.pkl")))
+bkgres = pickle.load(file(os.path.expandvars("resultsFinal_withSystematics_150121.pkl")))
 
 #pdg = 'pos'
 #pdg = 'neg'
@@ -132,14 +133,14 @@ res = pickle.load(file(os.path.expandvars("resultsFinal_withSystematics_andSigna
 #
 # consistency
 #
-njetBins = sorted(res.keys())
+njetBins = sorted(bkgres.keys())
 ltBins = [ ]
 htBins = [ ]
 for nj in njetBins:
-  for lt in res[nj]:
+  for lt in bkgres[nj]:
     if not lt in ltBins:
       ltBins.append(lt)
-    for ht in res[nj][lt]:
+    for ht in bkgres[nj][lt]:
       if not ht in htBins:
         htBins.append(ht)
 ltBins.sort()
@@ -155,9 +156,9 @@ for ht in htBins:
   print htBinToLabel(ht)
 
 signals = [
-          {'color': ROOT.kBlue ,'name': 's1500' ,'label': 'T5q^{4} 1.5/0.8/0.1'}, \
-          {'color': ROOT.kRed  ,'name': 's1200' ,'label': 'T5q^{4} 1.2/1.0/0.8'}, \
-          {'color': ROOT.kBlack ,'name': 's1000' ,'label': 'T5q^{4} 1.0/0.85/0.7'}, \
+          {'color': ROOT.kBlue ,'name': 's1500' , 'mglu' : 1500, 'mlsp' : 100, 'label': 'T5q^{4} 1.5/0.8/0.1'}, \
+          {'color': ROOT.kRed  ,'name': 's1200' , 'mglu' : 1200, 'mlsp' : 800, 'label': 'T5q^{4} 1.2/1.0/0.8'}, \
+          {'color': ROOT.kBlack ,'name': 's1000' , 'mglu' : 1000, 'mlsp' : 700, 'label': 'T5q^{4} 1.0/0.85/0.7'}, \
          ]
 
 #signal = signals[2]
@@ -171,10 +172,10 @@ procNames = [ "W", "tt", "other", "QCD" ]
 #nbins = 0
 #for njet in njetBins[:]:
 #  for lt in ltBins[:]:
-#    if not lt in res[njet]:
+#    if not lt in bkgres[njet]:
 #      continue
 #    for ht in htBins[:]:
-#      if not ht in res[njet][lt]:
+#      if not ht in bkgres[njet][lt]:
 #        continue
 #      nbins += 1
 
@@ -187,10 +188,10 @@ mbBinNames = [ ]
 mbBins = { }
 for njet in njetBins[:1]:
   for lt in ltBins[:1]:
-    if not lt in res[njet]:
+    if not lt in bkgres[njet]:
       continue
     for ht in htBins[:1]:
-      if not ht in res[njet][lt]:
+      if not ht in bkgres[njet][lt]:
         continue
       dphiLimit = dphiLimitToLabel(regionToDPhi[njet][lt][ht])
       bNameBase = njetBinToLabel(njet) + ltBinToLabel(lt) + htBinToLabel(ht) + dphiLimit
@@ -218,6 +219,8 @@ print sbBinNames
 
 for signal in signals[:1]:
   print signal
+  mglu = signal["mglu"]
+  mlsp = signal["mlsp"]
 
 
   c = cardFileWriter()
@@ -230,7 +233,8 @@ for signal in signals[:1]:
   #
   for sbname in sbBinNames:
     c.addBin(sbname,procNames,sbname)
-    sbres = res[sbBins[sbname][0]][sbBins[sbname][1]][sbBins[sbname][2]]
+    sbres = bkgres[sbBins[sbname][0]][sbBins[sbname][1]][sbBins[sbname][2]]
+    sbsigres = sigres[sbBins[sbname][0]][sbBins[sbname][1]][sbBins[sbname][2]]
     # low vs. high dphi
     r = sbname[-2:]
     rDPhi = "low" if r=="C" else "high"
@@ -255,7 +259,7 @@ for signal in signals[:1]:
           sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
       c.specifyObservation(sbname,int(y_truth+0.5))
       if sbname.endswith("S"):  # need to include also CR yields
-        c.specifyExpectation(sbname,"signal",sbres["signals"][signal["name"]]['yield'])
+        c.specifyExpectation(sbname,"signal",sbsigres["signals"][mglu][mlsp]['yield_SB_W_SR'])
       else:
         c.specifyExpectation(sbname,"signal",0.)
 #      c.specifyExpectation(sbname,"W",sbres["y_crNJet_0b_"+rDPhi]-sbres["yTT_crNJet_0b_"+rDPhi])
@@ -271,7 +275,7 @@ for signal in signals[:1]:
           sbres["yRest_crNJet_1b_"+rDPhi+"_truth"]
       c.specifyObservation(sbname,int(y_truth+0.5))
       if sbname.endswith("S"):  # need to include also CR yields
-        c.specifyExpectation(sbname,"signal",sbres["signals"][signal["name"]]['yield'])
+        c.specifyExpectation(sbname,"signal",sbsigres["signals"][mglu][mlsp]['yield_SB_tt_SR'])
       else:
         c.specifyExpectation(sbname,"signal",0.)
       c.specifyExpectation(sbname,"W",0.001)
@@ -289,7 +293,8 @@ for signal in signals[:1]:
 
   for mbname in mbBinNames:
     c.addBin(mbname,procNames,mbname)
-    mbres = res[mbBins[mbname][0]][mbBins[mbname][1]][mbBins[mbname][2]]
+    mbres = bkgres[mbBins[mbname][0]][mbBins[mbname][1]][mbBins[mbname][2]]
+    mbsigres = sigres[mbBins[mbname][0]][mbBins[mbname][1]][mbBins[mbname][2]]
     # low vs. high dphi
     r = mbname[-2:]
     if r=="C":
@@ -301,7 +306,7 @@ for signal in signals[:1]:
           mbres["yQCD_srNJet_0b_"+rDPhi+"_truth"]
       c.specifyObservation(mbname,int(y_truth+0.5))
       # expectation
-      c.specifyExpectation(mbname,"signal",mbres["signals"][signal["name"]]['yield']) # to be corrected!
+      c.specifyExpectation(mbname,"signal",mbsigres["signals"][mglu][mlsp]['yield_MB_CR']) # to be corrected!
       c.specifyExpectation(mbname,"tt",mbres["yTT_srNJet_0b_"+rDPhi])
       c.specifyExpectation(mbname,"W",mbres["yW_srNJet_0b_"+rDPhi])
       c.specifyExpectation(mbname,"other",mbres["yRest_srNJet_0b_"+rDPhi+"_truth"])
@@ -314,7 +319,7 @@ for signal in signals[:1]:
       y_truth = mbres["W_truth"] +  mbres["TT_truth"] + mbres["Rest_truth"]
       c.specifyObservation(mbname,int(y_truth+0.5))
       # expectation
-      c.specifyExpectation(mbname,"signal",mbres["signals"][signal["name"]]['yield']) # to be corrected!
+      c.specifyExpectation(mbname,"signal",mbsigres["signals"][mglu][mlsp]['yield_MB_SR']) # to be corrected!
       c.specifyExpectation(mbname,"tt",mbres["TT_pred"])
       c.specifyExpectation(mbname,"W",mbres["W_pred"])
       c.specifyExpectation(mbname,"other",mbres["Rest_truth"])
@@ -334,21 +339,21 @@ for signal in signals[:1]:
   for mbname in mbBinNames:
     mbnameBase = mbname[:-1]
     mbnameC = mbnameBase + "C"
-    mbresC = res[mbBins[mbnameC][0]][mbBins[mbnameC][1]][mbBins[mbnameC][2]]
+    mbresC = bkgres[mbBins[mbnameC][0]][mbBins[mbnameC][1]][mbBins[mbnameC][2]]
     mbnameS = mbnameBase + "S"
-    mbresS = res[mbBins[mbnameS][0]][mbBins[mbnameS][1]][mbBins[mbnameS][2]]
+    mbresS = bkgres[mbBins[mbnameS][0]][mbBins[mbnameS][1]][mbBins[mbnameS][2]]
 
     sbWnameBase = "J3" + mbnameBase[2:]
     # sbWnameC = sbWnameBase + "C"
-    # sbWresC = res[sbBins[sbWnameC][0]][sbBins[sbWnameC][1]][sbBins[sbWnameC][2]]
+    # sbWresC = bkgres[sbBins[sbWnameC][0]][sbBins[sbWnameC][1]][sbBins[sbWnameC][2]]
     sbWnameS = sbWnameBase + "S"
-    sbWresS = res[sbBins[sbWnameS][0]][sbBins[sbWnameS][1]][sbBins[sbWnameS][2]]
+    sbWresS = bkgres[sbBins[sbWnameS][0]][sbBins[sbWnameS][1]][sbBins[sbWnameS][2]]
 
     sbttnameBase = "J4" + mbnameBase[2:]
     # sbttnameC = sbttnameBase + "C"
-    # sbttresC = res[sbBins[sbttnameC][0]][sbBins[sbttnameC][1]][sbBins[sbttnameC][2]]
+    # sbttresC = bkgres[sbBins[sbttnameC][0]][sbBins[sbttnameC][1]][sbBins[sbttnameC][2]]
     sbttnameS = sbttnameBase + "S"
-    sbttresS = res[sbBins[sbttnameS][0]][sbBins[sbttnameS][1]][sbBins[sbttnameS][2]]
+    sbttresS = bkgres[sbBins[sbttnameS][0]][sbBins[sbttnameS][1]][sbBins[sbttnameS][2]]
 
     if mbname.endswith("S"):
 
@@ -397,7 +402,7 @@ for signal in signals[:1]:
 #      c.specifyUncertainty(uncName,mbname,"QCD",relErrForLimit(mbresC["yQCD_srNJet_0b_lowDPhi"],mbresC["yQCD_Var_srNJet_0b_lowDPhi"]))
 
   for sbname in sbBinNames:
-    sbres = res[sbBins[sbname][0]][sbBins[sbname][1]][sbBins[sbname][2]]
+    sbres = bkgres[sbBins[sbname][0]][sbBins[sbname][1]][sbBins[sbname][2]]
     # statistical uncertainty SB CRs
     obs = c.observation[sbname]
     assert obs>0
