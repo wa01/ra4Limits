@@ -7,6 +7,8 @@ import pickle
 #import array
 from Workspace.RA4Analysis.signalRegions import *
 
+CorrSystSize = 1000.00
+
 regionToDPhi = {
   (5, 5) : {
     (250, 350) : {
@@ -39,6 +41,47 @@ regionToDPhi = {
       }, 
     (450, -1) : {
       (500, -1) : 0.75
+      }
+    }
+
+}
+
+worstCaseSyst = {
+  (5, 5) : {
+    (250, 350) : {
+      (500, -1) : 0.25
+     }, 
+    (350, 450) : {
+      (500, -1) : 0.35
+      }, 
+    (450, -1) : {
+      (500, -1) : 0.45
+      }
+    }, 
+  (6, 7) : {
+    (250, 350) : {
+      (500, 750) : 1.00, (750, -1) : 0.30,
+      (750, -1) : 1.00, (750, -1) : 0.30
+     }, 
+    (350, 450) : {
+      (500, 750) : 1.00, (750, -1) : 0.40,
+      (500, 750) : 1.00, (750, -1) : 0.55
+      }, 
+    (450, -1) : {
+      (500, 1000) : 0.75, (1000, -1) : 0.30,
+      (1000, -1) : 0.75, (1000, -1) : 0.80
+      }
+    }, 
+  (8, -1) : {
+    (250, 350) : {
+      (500, 750) : 0.70, 
+      (750, -1) : 0.60,
+     }, 
+    (350, 450) : {
+      (500, -1) : 0.65
+      }, 
+    (450, -1) : {
+      (500, -1) : 0.70
       }
     }
 
@@ -96,7 +139,10 @@ def htBinToLabel(htBin):
 #  return "H"+"".join([str(x) for x in range(idxs[0],idxs[1])])
 
 def relErrForLimit(value,variance,sign=1):
-  return 1.+sign*sqrt(variance)/value
+  result = 1.+sign*sqrt(variance)/value
+  if result<0.:
+    result = 0.01
+  return result
   
 ROOT.gROOT.LoadMacro("$CMSSW_BASE/src/Workspace/HEPHYPythonTools/scripts/root/tdrstyle.C")
 ROOT.setTDRStyle()
@@ -158,7 +204,8 @@ for ht in htBins:
 signals = [
           {'color': ROOT.kBlue ,'name': 's1500' , 'mglu' : 1500, 'mlsp' : 100, 'label': 'T5q^{4} 1.5/0.8/0.1'}, \
           {'color': ROOT.kRed  ,'name': 's1200' , 'mglu' : 1200, 'mlsp' : 800, 'label': 'T5q^{4} 1.2/1.0/0.8'}, \
-          {'color': ROOT.kBlack ,'name': 's1000' , 'mglu' : 1000, 'mlsp' : 700, 'label': 'T5q^{4} 1.0/0.85/0.7'}, \
+#          {'color': ROOT.kBlack ,'name': 's1000' , 'mglu' : 1000, 'mlsp' : 700, 'label': 'T5q^{4} 1.0/0.85/0.7'}, \
+          {'color': ROOT.kBlack ,'name': 's1000' , 'mglu' : 1000, 'mlsp' : 100, 'label': 'T5q^{4} 1.0/0.55/0.1'}, \
          ]
 
 #signal = signals[2]
@@ -217,7 +264,7 @@ for njet in njetBins[:1]:
 print mbBinNames
 print sbBinNames                
 
-for signal in signals[:1]:
+for signal in signals[:]:
   print signal
   mglu = signal["mglu"]
   mlsp = signal["mlsp"]
@@ -328,6 +375,7 @@ for signal in signals[:1]:
   #
   # global uncertainties
   #
+  # c.addUncertainty("worst","lnN")
   c.addUncertainty("btag","lnN")
   c.addUncertainty("lumi","lnN")
   c.addUncertainty("sigSyst","lnN")
@@ -342,6 +390,7 @@ for signal in signals[:1]:
     mbresC = bkgres[mbBins[mbnameC][0]][mbBins[mbnameC][1]][mbBins[mbnameC][2]]
     mbnameS = mbnameBase + "S"
     mbresS = bkgres[mbBins[mbnameS][0]][mbBins[mbnameS][1]][mbBins[mbnameS][2]]
+    mbsigresS = sigres[mbBins[mbnameS][0]][mbBins[mbnameS][1]][mbBins[mbnameS][2]]
 
     sbWnameBase = "J3" + mbnameBase[2:]
     # sbWnameC = sbWnameBase + "C"
@@ -360,21 +409,21 @@ for signal in signals[:1]:
       # correlation W regions: B and F / E and F
       uncName = "corrWBF" + mbname[:-1]
       c.addUncertainty(uncName,"lnN")
-      c.specifyUncertainty(uncName,"J3"+mbname[2:-1]+"S","W",3.00)
-      c.specifyUncertainty(uncName,mbname,"W",3.00)
+      c.specifyUncertainty(uncName,"J3"+mbname[2:-1]+"S","W",CorrSystSize)
+      c.specifyUncertainty(uncName,mbname,"W",CorrSystSize)
       uncName = "corrWEF" + mbname[:-1]
       c.addUncertainty(uncName,"lnN")
-      c.specifyUncertainty(uncName,mbname[:-1]+"C","W",3.00)
-      c.specifyUncertainty(uncName,mbname,"W",3.00)
+      c.specifyUncertainty(uncName,mbname[:-1]+"C","W",CorrSystSize)
+      c.specifyUncertainty(uncName,mbname,"W",CorrSystSize)
       # correlation tt regions: D and F / E and F
       uncName = "corrTTDF" + mbname[:-1]
       c.addUncertainty(uncName,"lnN")
-      c.specifyUncertainty(uncName,"J4"+mbname[2:-1]+"S","tt",3.00)
-      c.specifyUncertainty(uncName,mbname,"tt",3.00)
+      c.specifyUncertainty(uncName,"J4"+mbname[2:-1]+"S","tt",CorrSystSize)
+      c.specifyUncertainty(uncName,mbname,"tt",CorrSystSize)
       uncName = "corrTTEF" + mbname[:-1]
       c.addUncertainty(uncName,"lnN")
-      c.specifyUncertainty(uncName,mbname[:-1]+"C","tt",3.00)
-      c.specifyUncertainty(uncName,mbname,"tt",3.00)
+      c.specifyUncertainty(uncName,mbname[:-1]+"C","tt",CorrSystSize)
+      c.specifyUncertainty(uncName,mbname,"tt",CorrSystSize)
       # anticorrelated W/tt yields from fit
       uncName = "yWtt" + mbnameC
       c.addUncertainty(uncName,"lnN")
@@ -393,6 +442,14 @@ for signal in signals[:1]:
       c.specifyUncertainty("btag",mbnameS,"W",1.05) # to be corrected!
       c.specifyUncertainty("btag",mbnameS,"W",1.05) # to be corrected!
       c.specifyUncertainty("btag",mbnameS,"other",1.05) # to be corrected!
+      # stat. uncertainty on signal efficiency
+      uncName = "statSeff" + mbnameS
+      c.addUncertainty(uncName,"lnN")
+      c.specifyUncertainty(uncName,mbnameS,"signal",1+mbsigresS["signals"][mglu][mlsp]["err_MB_SR"])
+#      # WORST CASE SYST
+#      uncName = "worst"+mbnameS
+#      c.addUncertainty(uncName,"lnN")
+#      c.specifyUncertainty(uncName,mbnameS,"W",1+worstCaseSyst[mbBins[mbname][0]][mbBins[mbname][1]][mbBins[mbname][2]])
 
     else:
       pass
@@ -424,6 +481,11 @@ for signal in signals[:1]:
                                                              sbres["yW_Var_crNJet_0b_highDPhi"]))
       c.specifyUncertainty(uncName,sbname,"tt",relErrForLimit(sbres["yTT_crNJet_0b_highDPhi"], \
                                                                 sbres["yTT_Var_crNJet_0b_highDPhi"],-1))
+      if uncName=="yWttJ3L3H1D2S":
+        print sbres["yW_crNJet_0b_highDPhi"],sbres["yW_Var_crNJet_0b_highDPhi"], \
+            relErrForLimit(sbres["yW_crNJet_0b_highDPhi"],sbres["yW_Var_crNJet_0b_highDPhi"])
+        print sbres["yTT_crNJet_0b_highDPhi"],sbres["yTT_Var_crNJet_0b_highDPhi"], \
+            relErrForLimit(sbres["yTT_crNJet_0b_highDPhi"],sbres["yTT_Var_crNJet_0b_highDPhi"],-1)
 
   #
   # QCD
