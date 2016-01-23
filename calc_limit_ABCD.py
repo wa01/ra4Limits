@@ -242,24 +242,21 @@ for njet in njetBins[:1]:
         continue
       dphiLimit = dphiLimitToLabel(regionToDPhi[njet][lt][ht])
       bNameBase = njetBinToLabel(njet) + ltBinToLabel(lt) + htBinToLabel(ht) + dphiLimit
-      for r in [ "C", "S" ]:
-        bName = bNameBase + r
-        assert not bName in mbBinNames
-        mbBinNames.append(bName)
-        mbBins[bName] = ( njet, lt, ht )
-        for sb in [ "W", "tt" ]:
-          if r=="C":
-            continue
-          if sb=="W":
-            sbName = "J3"  + ltBinToLabel(lt) + htBinToLabel(ht) + dphiLimit + r
-            if not sbName in sbBinNames:
-              sbBinNames.append(sbName)
-              sbBins[sbName] = ( njet, lt, ht )
-          elif sb=="tt":
-            sbName = "J4"  + ltBinToLabel(lt) + htBinToLabel(ht) + dphiLimit + r
-            if not sbName in sbBinNames:
-              sbBinNames.append(sbName)
-              sbBins[sbName] = ( njet, lt, ht )            
+      bName = bNameBase
+      assert not bName in mbBinNames
+      mbBinNames.append(bName)
+      mbBins[bName] = ( njet, lt, ht )
+      for sb in [ "W", "tt" ]:
+        if sb=="W":
+          sbName = "J3"  + ltBinToLabel(lt) + htBinToLabel(ht) + dphiLimit
+          if not sbName in sbBinNames:
+            sbBinNames.append(sbName)
+            sbBins[sbName] = ( njet, lt, ht )
+        elif sb=="tt":
+          sbName = "J4"  + ltBinToLabel(lt) + htBinToLabel(ht) + dphiLimit
+          if not sbName in sbBinNames:
+            sbBinNames.append(sbName)
+            sbBins[sbName] = ( njet, lt, ht )            
 
 print mbBinNames
 print sbBinNames                
@@ -279,11 +276,11 @@ for signal in signals[:]:
   # define bins
   #
   for sbname in sbBinNames:
-    c.addBin(sbname,procNames,sbname)
+    sbnameS = sbname + "S"
+    c.addBin(sbnameS,procNames,sbnameS)
     sbres = bkgres[sbBins[sbname][0]][sbBins[sbname][1]][sbBins[sbname][2]]
     sbsigres = sigres[sbBins[sbname][0]][sbBins[sbname][1]][sbBins[sbname][2]]
-    # low vs. high dphi
-    r = sbname[-2:]
+    r = "S"
     rDPhi = "low" if r=="C" else "high"
     rDPhi += "DPhi"
     # calculate missing numbers
@@ -299,78 +296,70 @@ for signal in signals[:]:
     sbres["yW_Var_crNJet_0b_"+rDPhi] = wVar
 
     # W
-    if sbname[:2]=="J3":
+    if sbnameS[:2]=="J3":
       # observation
       y_truth = sbres["yW_crNJet_0b_"+rDPhi+"_truth"] + \
           sbres["yTT_crNJet_0b_"+rDPhi+"_truth"] + \
           sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
-      c.specifyObservation(sbname,int(y_truth+0.5))
-      if sbname.endswith("S"):  # need to include also CR yields
-        c.specifyExpectation(sbname,"signal",sbsigres["signals"][mglu][mlsp]['yield_SB_W_SR'])
-      else:
-        c.specifyExpectation(sbname,"signal",0.)
-#      c.specifyExpectation(sbname,"W",sbres["y_crNJet_0b_"+rDPhi]-sbres["yTT_crNJet_0b_"+rDPhi])
-      c.specifyExpectation(sbname,"W",sbres["yW_crNJet_0b_"+rDPhi])
-      c.specifyExpectation(sbname,"tt",sbres["yTT_crNJet_0b_"+rDPhi])
-      c.specifyExpectation(sbname,"other",0.001) # others are neglected in yield
-      c.specifyExpectation(sbname,"QCD",0.001)
+      c.specifyObservation(sbnameS,int(y_truth+0.5))
+      c.specifyExpectation(sbnameS,"signal",sbsigres["signals"][mglu][mlsp]['yield_SB_W_SR'])
+#      c.specifyExpectation(sbnameS,"W",sbres["y_crNJet_0b_"+rDPhi]-sbres["yTT_crNJet_0b_"+rDPhi])
+      c.specifyExpectation(sbnameS,"W",sbres["yW_crNJet_0b_"+rDPhi])
+      c.specifyExpectation(sbnameS,"tt",sbres["yTT_crNJet_0b_"+rDPhi])
+      c.specifyExpectation(sbnameS,"other",0.001) # others are neglected in yield
+      c.specifyExpectation(sbnameS,"QCD",0.001)
     # tt
-    elif sbname[:2]=="J4":
+    elif sbnameS[:2]=="J4":
       # observation
       y_truth = sbres["yW_crNJet_1b_"+rDPhi+"_truth"] + \
           sbres["yTT_crNJet_1b_"+rDPhi+"_truth"] + \
           sbres["yRest_crNJet_1b_"+rDPhi+"_truth"]
-      c.specifyObservation(sbname,int(y_truth+0.5))
-      if sbname.endswith("S"):  # need to include also CR yields
-        c.specifyExpectation(sbname,"signal",sbsigres["signals"][mglu][mlsp]['yield_SB_tt_SR'])
-      else:
-        c.specifyExpectation(sbname,"signal",0.)
-      c.specifyExpectation(sbname,"W",0.001)
-      c.specifyExpectation(sbname,"tt",sbres["y_crNJet_1b_"+rDPhi])
-      c.specifyExpectation(sbname,"other",0.001) # others are neglected in yield
-      c.specifyExpectation(sbname,"QCD",0.001)
-    if sbname.endswith("C"):
-      pass
-#      # low DPhi
-#      uncName = "yQCD" + sbname
-#      c.addUncertainty(uncName,"lnN")
-#      c.specifyUncertainty(uncName,sbname,"QCD",relErrForLimit(sbres["yQCD_crNJet_0b_lowDPhi"],\
-#         sbres["yQCD_Var_crNJet_0b_lowDPhi"]))
+      c.specifyObservation(sbnameS,int(y_truth+0.5))
+      c.specifyExpectation(sbnameS,"signal",sbsigres["signals"][mglu][mlsp]['yield_SB_tt_SR'])
+      c.specifyExpectation(sbnameS,"W",0.001)
+      c.specifyExpectation(sbnameS,"tt",sbres["y_crNJet_1b_"+rDPhi])
+      c.specifyExpectation(sbnameS,"other",0.001) # others are neglected in yield
+      c.specifyExpectation(sbnameS,"QCD",0.001)
 
 
   for mbname in mbBinNames:
-    c.addBin(mbname,procNames,mbname)
     mbres = bkgres[mbBins[mbname][0]][mbBins[mbname][1]][mbBins[mbname][2]]
     mbsigres = sigres[mbBins[mbname][0]][mbBins[mbname][1]][mbBins[mbname][2]]
-    # low vs. high dphi
-    r = mbname[-2:]
-    if r=="C":
-      rDPhi = "lowDPhi"
-      # observation
-      y_truth = mbres["yW_srNJet_0b_"+rDPhi+"_truth"] + \
-          mbres["yTT_srNJet_0b_"+rDPhi+"_truth"] + \
-          mbres["yRest_srNJet_0b_"+rDPhi+"_truth"] + \
-          mbres["yQCD_srNJet_0b_"+rDPhi+"_truth"]
-      c.specifyObservation(mbname,int(y_truth+0.5))
-      # expectation
-      c.specifyExpectation(mbname,"signal",mbsigres["signals"][mglu][mlsp]['yield_MB_CR']) # to be corrected!
-      c.specifyExpectation(mbname,"tt",mbres["yTT_srNJet_0b_"+rDPhi])
-      c.specifyExpectation(mbname,"W",mbres["yW_srNJet_0b_"+rDPhi])
-      c.specifyExpectation(mbname,"other",mbres["yRest_srNJet_0b_"+rDPhi+"_truth"])
-      # !!!!! to be changed
-      c.specifyExpectation(mbname,"QCD",0.001)
-      # c.specifyExpectation(mbname,"QCD",mbres["yQCD_srNJet_0b"])
-    else:
-      rDPhi = "highDPhi"
-      # observation
-      y_truth = mbres["W_truth"] +  mbres["TT_truth"] + mbres["Rest_truth"]
-      c.specifyObservation(mbname,int(y_truth+0.5))
-      # expectation
-      c.specifyExpectation(mbname,"signal",mbsigres["signals"][mglu][mlsp]['yield_MB_SR']) # to be corrected!
-      c.specifyExpectation(mbname,"tt",mbres["TT_pred"])
-      c.specifyExpectation(mbname,"W",mbres["W_pred"])
-      c.specifyExpectation(mbname,"other",mbres["Rest_truth"])
-      c.specifyExpectation(mbname,"QCD",0.001)
+    #
+    # low dPhi
+    #
+    mbnameC = mbname + "C"
+    c.addBin(mbnameC,procNames,mbnameC)
+    rDPhi = "lowDPhi"
+    # observation
+    y_truth = mbres["yW_srNJet_0b_"+rDPhi+"_truth"] + \
+        mbres["yTT_srNJet_0b_"+rDPhi+"_truth"] + \
+        mbres["yRest_srNJet_0b_"+rDPhi+"_truth"] + \
+        mbres["yQCD_srNJet_0b_"+rDPhi+"_truth"]
+    c.specifyObservation(mbnameC,int(y_truth+0.5))
+    # expectation
+    c.specifyExpectation(mbnameC,"signal",mbsigres["signals"][mglu][mlsp]['yield_MB_CR']) # to be corrected!
+    c.specifyExpectation(mbnameC,"tt",mbres["yTT_srNJet_0b_"+rDPhi])
+    c.specifyExpectation(mbnameC,"W",mbres["yW_srNJet_0b_"+rDPhi])
+    c.specifyExpectation(mbnameC,"other",mbres["yRest_srNJet_0b_"+rDPhi+"_truth"])
+    # !!!!! to be changed
+    c.specifyExpectation(mbnameC,"QCD",0.001)
+    # c.specifyExpectation(mbnameC,"QCD",mbres["yQCD_srNJet_0b"])
+    #
+    # high dPhi
+    #
+    mbnameS = mbname + "S"
+    c.addBin(mbnameS,procNames,mbnameS)
+    rDPhi = "highDPhi"
+    # observation
+    y_truth = mbres["W_truth"] +  mbres["TT_truth"] + mbres["Rest_truth"]
+    c.specifyObservation(mbnameS,int(y_truth+0.5))
+    # expectation
+    c.specifyExpectation(mbnameS,"signal",mbsigres["signals"][mglu][mlsp]['yield_MB_SR']) # to be corrected!
+    c.specifyExpectation(mbnameS,"tt",mbres["TT_pred"])
+    c.specifyExpectation(mbnameS,"W",mbres["W_pred"])
+    c.specifyExpectation(mbnameS,"other",mbres["Rest_truth"])
+    c.specifyExpectation(mbnameS,"QCD",0.001)
 
   #
   # global uncertainties
@@ -379,107 +368,110 @@ for signal in signals[:]:
   c.addUncertainty("btag","lnN")
   c.addUncertainty("lumi","lnN")
   c.addUncertainty("sigSyst","lnN")
-  for bname in sbBinNames+mbBinNames:
-    c.specifyUncertainty("lumi",bname,"signal",1.046)
-    c.specifyUncertainty("sigSyst",bname,"signal",1.20) # to be corrected!
-    c.specifyUncertainty("lumi",bname,"other",1.046)
+  for bname in sbBinNames:
+    sbname = bname + "S"
+    c.specifyUncertainty("lumi",sbname,"signal",1.046)
+    c.specifyUncertainty("sigSyst",sbname,"signal",1.20) # to be corrected!
+    c.specifyUncertainty("lumi",sbname,"other",1.046)
+  for bname in mbBinNames:
+    for r in [ "C", "S" ]:
+      mbname = bname + r
+      print mbname
+      c.specifyUncertainty("lumi",mbname,"signal",1.046)
+      c.specifyUncertainty("sigSyst",mbname,"signal",1.20) # to be corrected!
+      c.specifyUncertainty("lumi",mbname,"other",1.046)
 
   for mbname in mbBinNames:
-    mbnameBase = mbname[:-1]
-    mbnameC = mbnameBase + "C"
-    mbresC = bkgres[mbBins[mbnameC][0]][mbBins[mbnameC][1]][mbBins[mbnameC][2]]
-    mbnameS = mbnameBase + "S"
-    mbresS = bkgres[mbBins[mbnameS][0]][mbBins[mbnameS][1]][mbBins[mbnameS][2]]
-    mbsigresS = sigres[mbBins[mbnameS][0]][mbBins[mbnameS][1]][mbBins[mbnameS][2]]
+    bname = mbname[2:]
+    mbnameC = mbname + "C"
+    mbnameS = mbname + "S"
+    mbres = bkgres[mbBins[mbname][0]][mbBins[mbname][1]][mbBins[mbname][2]]
+    mbsigres = sigres[mbBins[mbname][0]][mbBins[mbname][1]][mbBins[mbname][2]]
 
-    sbWnameBase = "J3" + mbnameBase[2:]
+    sbWname = "J3" + bname
     # sbWnameC = sbWnameBase + "C"
     # sbWresC = bkgres[sbBins[sbWnameC][0]][sbBins[sbWnameC][1]][sbBins[sbWnameC][2]]
-    sbWnameS = sbWnameBase + "S"
-    sbWresS = bkgres[sbBins[sbWnameS][0]][sbBins[sbWnameS][1]][sbBins[sbWnameS][2]]
+    sbWnameS = sbWname + "S"
+    sbWresS = bkgres[sbBins[sbWname][0]][sbBins[sbWname][1]][sbBins[sbWname][2]]
 
-    sbttnameBase = "J4" + mbnameBase[2:]
+    sbttname = "J4" + bname
     # sbttnameC = sbttnameBase + "C"
     # sbttresC = bkgres[sbBins[sbttnameC][0]][sbBins[sbttnameC][1]][sbBins[sbttnameC][2]]
-    sbttnameS = sbttnameBase + "S"
-    sbttresS = bkgres[sbBins[sbttnameS][0]][sbBins[sbttnameS][1]][sbBins[sbttnameS][2]]
-
-    if mbname.endswith("S"):
-
-      # correlation W regions: B and F / E and F
-      uncName = "corrWBF" + mbname[:-1]
-      c.addUncertainty(uncName,"lnN")
-      c.specifyUncertainty(uncName,"J3"+mbname[2:-1]+"S","W",CorrSystSize)
-      c.specifyUncertainty(uncName,mbname,"W",CorrSystSize)
-      uncName = "corrWEF" + mbname[:-1]
-      c.addUncertainty(uncName,"lnN")
-      c.specifyUncertainty(uncName,mbname[:-1]+"C","W",CorrSystSize)
-      c.specifyUncertainty(uncName,mbname,"W",CorrSystSize)
-      # correlation tt regions: D and F / E and F
-      uncName = "corrTTDF" + mbname[:-1]
-      c.addUncertainty(uncName,"lnN")
-      c.specifyUncertainty(uncName,"J4"+mbname[2:-1]+"S","tt",CorrSystSize)
-      c.specifyUncertainty(uncName,mbname,"tt",CorrSystSize)
-      uncName = "corrTTEF" + mbname[:-1]
-      c.addUncertainty(uncName,"lnN")
-      c.specifyUncertainty(uncName,mbname[:-1]+"C","tt",CorrSystSize)
-      c.specifyUncertainty(uncName,mbname,"tt",CorrSystSize)
-      # anticorrelated W/tt yields from fit
-      uncName = "yWtt" + mbnameC
-      c.addUncertainty(uncName,"lnN")
-      c.specifyUncertainty(uncName,mbnameC,"W",relErrForLimit(mbresC["yW_srNJet_0b_lowDPhi"],mbresC["yW_Var_srNJet_0b_lowDPhi"]))
-      c.specifyUncertainty(uncName,mbnameC,"tt",relErrForLimit(mbresC["yTT_srNJet_0b_lowDPhi"],mbresC["yTT_Var_srNJet_0b_lowDPhi"],-1))
-      # uncertainty on kappas
-      uncName = "kappa" + mbnameS
-      c.addUncertainty(uncName,"lnN")
-      c.specifyUncertainty(uncName,mbnameS,"W",1.25) # to be corrected!
-      c.specifyUncertainty(uncName,mbnameS,"tt",1.25) # to be corrected!
-      # uncertainty on RCS_W (e+mu)/mu
-      uncName = "rcsWemu" + mbnameS
-      c.addUncertainty(uncName,"lnN")
-      c.specifyUncertainty(uncName,mbnameS,"W",1.05) # to be corrected!
-      # uncertainty on b tagging
-      c.specifyUncertainty("btag",mbnameS,"W",1.05) # to be corrected!
-      c.specifyUncertainty("btag",mbnameS,"W",1.05) # to be corrected!
-      c.specifyUncertainty("btag",mbnameS,"other",1.05) # to be corrected!
-      # stat. uncertainty on signal efficiency
-      uncName = "statSeff" + mbnameS
-      c.addUncertainty(uncName,"lnN")
-      c.specifyUncertainty(uncName,mbnameS,"signal",1+mbsigresS["signals"][mglu][mlsp]["err_MB_SR"])
+    sbttnameS = sbttname + "S"
+    sbttresS = bkgres[sbBins[sbttname][0]][sbBins[sbttname][1]][sbBins[sbttname][2]]
+    #
+    # signal regions
+    #
+    # correlation W regions: B and F / E and F
+    uncName = "corrWBF" + mbname
+    c.addUncertainty(uncName,"lnN")
+    c.specifyUncertainty(uncName,"J3"+bname+"S","W",CorrSystSize)
+    c.specifyUncertainty(uncName,mbnameS,"W",CorrSystSize)
+    uncName = "corrWEF" + mbname
+    c.addUncertainty(uncName,"lnN")
+    c.specifyUncertainty(uncName,mbnameC,"W",CorrSystSize)
+    c.specifyUncertainty(uncName,mbnameS,"W",CorrSystSize)
+    # correlation tt regions: D and F / E and F
+    uncName = "corrTTDF" + mbname
+    c.addUncertainty(uncName,"lnN")
+    c.specifyUncertainty(uncName,"J4"+bname+"S","tt",CorrSystSize)
+    c.specifyUncertainty(uncName,mbnameS,"tt",CorrSystSize)
+    uncName = "corrTTEF" + mbname
+    c.addUncertainty(uncName,"lnN")
+    c.specifyUncertainty(uncName,mbnameC,"tt",CorrSystSize)
+    c.specifyUncertainty(uncName,mbnameS,"tt",CorrSystSize)
+    # anticorrelated W/tt yields from fit
+    uncName = "yWtt" + mbnameC
+    c.addUncertainty(uncName,"lnN")
+    c.specifyUncertainty(uncName,mbnameC,"W",relErrForLimit(mbres["yW_srNJet_0b_lowDPhi"],mbres["yW_Var_srNJet_0b_lowDPhi"]))
+    c.specifyUncertainty(uncName,mbnameC,"tt",relErrForLimit(mbres["yTT_srNJet_0b_lowDPhi"],mbres["yTT_Var_srNJet_0b_lowDPhi"],-1))
+    # uncertainty on kappas
+    uncName = "kappa" + mbnameS
+    c.addUncertainty(uncName,"lnN")
+    c.specifyUncertainty(uncName,mbnameS,"W",1.25) # to be corrected!
+    c.specifyUncertainty(uncName,mbnameS,"tt",1.25) # to be corrected!
+    # uncertainty on RCS_W (e+mu)/mu
+    uncName = "rcsWemu" + mbnameS
+    c.addUncertainty(uncName,"lnN")
+    c.specifyUncertainty(uncName,mbnameS,"W",1.05) # to be corrected!
+    # uncertainty on b tagging
+    c.specifyUncertainty("btag",mbnameS,"W",1.05) # to be corrected!
+    c.specifyUncertainty("btag",mbnameS,"W",1.05) # to be corrected!
+    c.specifyUncertainty("btag",mbnameS,"other",1.05) # to be corrected!
+    # stat. uncertainty on signal efficiency
+    uncName = "statSeff" + mbnameS
+    c.addUncertainty(uncName,"lnN")
+    c.specifyUncertainty(uncName,mbnameS,"signal",1+mbsigres["signals"][mglu][mlsp]["err_MB_SR"])
 #      # WORST CASE SYST
 #      uncName = "worst"+mbnameS
 #      c.addUncertainty(uncName,"lnN")
 #      c.specifyUncertainty(uncName,mbnameS,"W",1+worstCaseSyst[mbBins[mbname][0]][mbBins[mbname][1]][mbBins[mbname][2]])
 
-    else:
-      pass
-#      # low DPhi
-#      uncName = "yQCD" + mbname
-#      c.addUncertainty(uncName,"lnN")
-#      c.specifyUncertainty(uncName,mbname,"QCD",relErrForLimit(mbresC["yQCD_srNJet_0b_lowDPhi"],mbresC["yQCD_Var_srNJet_0b_lowDPhi"]))
 
   for sbname in sbBinNames:
     sbres = bkgres[sbBins[sbname][0]][sbBins[sbname][1]][sbBins[sbname][2]]
+    sbnameC = sbname + "C"
+    sbnameS = sbname + "S"
     # statistical uncertainty SB CRs
-    obs = c.observation[sbname]
+    obs = c.observation[sbnameS] # to be corrected !!!
     assert obs>0
     unc = 1. + 1./sqrt(obs)
-    uncName = "stat" + sbname[:-1] + "C"
+    uncName = "stat" + sbnameC
     c.addUncertainty(uncName,"lnN")
     for mbname in mbBinNames:
-      if not mbname.endswith("S"):
-        continue
-      if "J3"+mbname[2:-1]+"C"==sbname:
+      bname = mbname[2:]
+      mbnameS = mbname + "S"
+      if "J3"+bname+"C"==sbname:
         c.specifyUncertainty(uncName,mbname,"W",unc)
-      elif "J4"+mbname[2:-1]+"C"==sbname:
+      elif "J4"+bname+"C"==sbname:
         c.specifyUncertainty(uncName,mbname,"tt",unc)
     # anticorrelated W/tt yields from fit
     if sbname.startswith("J3"):
-      uncName = "yWtt" + sbname
+      uncName = "yWtt" + sbnameS
       c.addUncertainty(uncName,"lnN")
-      c.specifyUncertainty(uncName,sbname,"W",relErrForLimit(sbres["yW_crNJet_0b_highDPhi"], 
+      c.specifyUncertainty(uncName,sbnameS,"W",relErrForLimit(sbres["yW_crNJet_0b_highDPhi"], 
                                                              sbres["yW_Var_crNJet_0b_highDPhi"]))
-      c.specifyUncertainty(uncName,sbname,"tt",relErrForLimit(sbres["yTT_crNJet_0b_highDPhi"], \
+      c.specifyUncertainty(uncName,sbnameS,"tt",relErrForLimit(sbres["yTT_crNJet_0b_highDPhi"], \
                                                                 sbres["yTT_Var_crNJet_0b_highDPhi"],-1))
       if uncName=="yWttJ3L3H1D2S":
         print sbres["yW_crNJet_0b_highDPhi"],sbres["yW_Var_crNJet_0b_highDPhi"], \
@@ -498,6 +490,7 @@ for signal in signals[:]:
 #    c.specifyUncertainty("lumi",bname,"other",1.046)
 
   c.writeToFile("calc_limit.txt")
+  continue
   #
   # comments
   #
