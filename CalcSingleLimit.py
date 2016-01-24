@@ -64,12 +64,26 @@ class CalcSingleLimit:
         self.c.addBin(sbnameS,self.procNames,sbnameS)
         sbres = self.subDict(self.bkgres,self.sbBins[sbname])
         self.sbsigres = self.subDict(self.sigres,self.sbBins[sbname])
+
+        #
+        # debug
+        #
+        if sbname.startswith("J4"):
+            numerator = sbres["y_crNJet_1b_highDPhi"] - sbres["yQCD_crNJet_1b_highDPhi"]
+            denominator = sbres["y_crNJet_1b_lowDPhi"] - sbres["yQCD_crNJet_1b_lowDPhi"]
+            print "ttbar SB :",numerator,denominator,numerator/denominator,sbres["rCS_crLowNJet_1b"]
+            print sbres["rCS_crLowNJet_1b"]["rCS"],sbres["rCS_crLowNJet_1b_kappa"]["rCS"], \
+                sbres["rCS_crLowNJet_1b_onlyTT"]["rCS"],sbres["rCS_srNJet_0b_onlyTT"]["rCS"]
+        #
+
+
         r = "S"
         rDPhi = "low" if r=="C" else "high"
         rDPhi += "DPhi"
         # calculate missing numbers
         # yield (W) = observed - estimated tt # others are neglected in yield
-        wYield = sbres["y_crNJet_0b_"+rDPhi] - sbres["yTT_crNJet_0b_"+rDPhi] 
+        wYield = sbres["y_crNJet_0b_"+rDPhi] - sbres["yTT_crNJet_0b_"+rDPhi] - \
+            sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
         sbres["yW_crNJet_0b_"+rDPhi] = wYield
         # error on wYield
         # yield (W) = observed - estimated tt # others are neglected in yield
@@ -84,13 +98,13 @@ class CalcSingleLimit:
           y_truth = sbres["yW_crNJet_0b_"+rDPhi+"_truth"] + \
               sbres["yTT_crNJet_0b_"+rDPhi+"_truth"] + \
               sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
-          self.c.specifyObservation(sbnameS,int(y_truth+0.5))
+          self.c.specifyObservation(sbnameS,int(sbres["y_crNJet_0b_highDPhi"]+0.5))
           self.c.specifyExpectation(sbnameS,"signal",self.sigSubDict(self.sbsigres)['yield_SB_W_SR'])
         #      self.c.specifyExpectation(sbnameS,"W",sbres["y_crNJet_0b_"+rDPhi]-sbres["yTT_crNJet_0b_"+rDPhi])
           self.c.specifyExpectation(sbnameS,"W",sbres["yW_crNJet_0b_"+rDPhi])
           self.c.specifyExpectation(sbnameS,"tt",sbres["yTT_crNJet_0b_"+rDPhi])
-          self.c.specifyExpectation(sbnameS,"other",0.001) # others are neglected in yield
-          self.c.specifyExpectation(sbnameS,"QCD",0.001)
+          self.c.specifyExpectation(sbnameS,"other",sbres["yRest_crNJet_0b_"+rDPhi+"_truth"])
+          self.c.specifyExpectation(sbnameS,"QCD",0.001) # QCD is neglected in yield
         #
         # define tt sideband
         # 
@@ -99,12 +113,14 @@ class CalcSingleLimit:
           y_truth = sbres["yW_crNJet_1b_"+rDPhi+"_truth"] + \
               sbres["yTT_crNJet_1b_"+rDPhi+"_truth"] + \
               sbres["yRest_crNJet_1b_"+rDPhi+"_truth"]
-          self.c.specifyObservation(sbnameS,int(y_truth+0.5))
+          self.c.specifyObservation(sbnameS,int(sbres["y_crNJet_1b_highDPhi"]+0.5))
           self.c.specifyExpectation(sbnameS,"signal",self.sigSubDict(self.sbsigres)['yield_SB_tt_SR'])
           self.c.specifyExpectation(sbnameS,"W",0.001)
           self.c.specifyExpectation(sbnameS,"tt",sbres["y_crNJet_1b_"+rDPhi])
-          self.c.specifyExpectation(sbnameS,"other",0.001) # others are neglected in yield
+          self.c.specifyExpectation(sbnameS,"other",0.001) 
           self.c.specifyExpectation(sbnameS,"QCD",0.001)
+#          self.c.specifyExpectation(sbnameS,"other",sbres["yRest_crNJet_1b_"+rDPhi+"_truth"]) 
+#          self.c.specifyExpectation(sbnameS,"QCD",sbres["yQCD_crNJet_1b_highDPhi"])
 
       for mbname in mbBinNames:
         mbres = self.subDict(self.bkgres,self.mbBins[mbname])
@@ -120,16 +136,13 @@ class CalcSingleLimit:
             mbres["yTT_srNJet_0b_"+rDPhi+"_truth"] + \
             mbres["yRest_srNJet_0b_"+rDPhi+"_truth"] + \
             mbres["yQCD_srNJet_0b_"+rDPhi+"_truth"]
-        self.c.specifyObservation(mbnameC,int(y_truth+0.5))
+        self.c.specifyObservation(mbnameC,int(y_truth+0.5)) # !*! to be corrected
         # expectation
         self.c.specifyExpectation(mbnameC,"signal",self.sigSubDict(self.mbsigres)['yield_MB_CR']) # to be corrected!
         self.c.specifyExpectation(mbnameC,"tt",mbres["yTT_srNJet_0b_"+rDPhi])
         self.c.specifyExpectation(mbnameC,"W",mbres["yW_srNJet_0b_"+rDPhi])
         self.c.specifyExpectation(mbnameC,"other",mbres["yRest_srNJet_0b_"+rDPhi+"_truth"])
-        # !*! to be changed
-#        self.c.specifyExpectation(mbnameC,"QCD",mbres["yQCD_srNJet_0b_"+rDPhi+"_truth"])
-        self.c.specifyExpectation(mbnameC,"QCD",0.001)
-        # self.c.specifyExpectation(mbnameC,"QCD",mbres["yQCD_srNJet_0b"])
+        self.c.specifyExpectation(mbnameC,"QCD",mbres["yQCD_srNJet_0b_"+rDPhi])
         #
         # high dPhi
         #
@@ -138,7 +151,7 @@ class CalcSingleLimit:
         rDPhi = "highDPhi"
         # observation
         y_truth = mbres["W_truth"] +  mbres["TT_truth"] + mbres["Rest_truth"]
-        self.c.specifyObservation(mbnameS,int(y_truth+0.5))
+        self.c.specifyObservation(mbnameS,int(y_truth+0.5)) # !*! to be corrected
         # expectation
         self.c.specifyExpectation(mbnameS,"signal",self.sigSubDict(self.mbsigres)['yield_MB_SR']) # to be corrected!
         self.c.specifyExpectation(mbnameS,"tt",mbres["TT_pred"])
