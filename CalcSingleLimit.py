@@ -43,7 +43,7 @@ class CalcSingleLimit:
     def limitSinglePoint(self):
 
       #
-      # define bins
+      # bin definition; observed and expected counts
       #
       for sbname in self.sbBinNames:
         sbnameS = sbname + "S"
@@ -54,20 +54,19 @@ class CalcSingleLimit:
         rDPhi = "low" if r=="C" else "high"
         rDPhi += "DPhi"
         # calculate missing numbers
-        # yield (W) = observed - estimated tt - EWK(other)
-        # wYield = sbres["y_crNJet_0b_"+rDPhi] - sbres["yTT_crNJet_0b_"+rDPhi] - \
-        #    sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
-        wYield = sbres["y_crNJet_0b_"+rDPhi] - sbres["yTT_crNJet_0b_"+rDPhi] # others are neglected in yield
+        # yield (W) = observed - estimated tt # others are neglected in yield
+        wYield = sbres["y_crNJet_0b_"+rDPhi] - sbres["yTT_crNJet_0b_"+rDPhi] 
         sbres["yW_crNJet_0b_"+rDPhi] = wYield
         # error on wYield
-        # wVar = sbres["y_Var_crNJet_0b_"+rDPhi] + sbres["yTT_Var_crNJet_0b_"+rDPhi] + \
-        #    sbres["yRest_Var_crNJet_0b_"+rDPhi+"_truth"]
-        wVar = sbres["y_Var_crNJet_0b_"+rDPhi] + sbres["yTT_Var_crNJet_0b_"+rDPhi] # others are neglected in yield
+        # yield (W) = observed - estimated tt # others are neglected in yield
+        wVar = sbres["y_Var_crNJet_0b_"+rDPhi] + sbres["yTT_Var_crNJet_0b_"+rDPhi]
         sbres["yW_Var_crNJet_0b_"+rDPhi] = wVar
-
-        # W
+        #
+        # define W sideband
+        #
         if sbnameS[:2]=="J3":
           # observation
+          # currently: derive from truth (!*! assume no QCD in SB/SR)
           y_truth = sbres["yW_crNJet_0b_"+rDPhi+"_truth"] + \
               sbres["yTT_crNJet_0b_"+rDPhi+"_truth"] + \
               sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
@@ -78,7 +77,9 @@ class CalcSingleLimit:
           self.c.specifyExpectation(sbnameS,"tt",sbres["yTT_crNJet_0b_"+rDPhi])
           self.c.specifyExpectation(sbnameS,"other",0.001) # others are neglected in yield
           self.c.specifyExpectation(sbnameS,"QCD",0.001)
-        # tt
+        #
+        # define tt sideband
+        # 
         elif sbnameS[:2]=="J4":
           # observation
           y_truth = sbres["yW_crNJet_1b_"+rDPhi+"_truth"] + \
@@ -91,12 +92,11 @@ class CalcSingleLimit:
           self.c.specifyExpectation(sbnameS,"other",0.001) # others are neglected in yield
           self.c.specifyExpectation(sbnameS,"QCD",0.001)
 
-
       for mbname in self.mbBinNames:
         mbres = self.subDict(self.bkgres,self.mbBins[mbname])
         self.mbsigres = self.subDict(self.sigres,self.mbBins[mbname])
         #
-        # low dPhi
+        # low dPhi (CR)
         #
         mbnameC = mbname + "C"
         self.c.addBin(mbnameC,self.procNames,mbnameC)
@@ -112,7 +112,8 @@ class CalcSingleLimit:
         self.c.specifyExpectation(mbnameC,"tt",mbres["yTT_srNJet_0b_"+rDPhi])
         self.c.specifyExpectation(mbnameC,"W",mbres["yW_srNJet_0b_"+rDPhi])
         self.c.specifyExpectation(mbnameC,"other",mbres["yRest_srNJet_0b_"+rDPhi+"_truth"])
-        # !!!!! to be changed
+        # !*! to be changed
+#        self.c.specifyExpectation(mbnameC,"QCD",mbres["yQCD_srNJet_0b_"+rDPhi+"_truth"])
         self.c.specifyExpectation(mbnameC,"QCD",0.001)
         # self.c.specifyExpectation(mbnameC,"QCD",mbres["yQCD_srNJet_0b"])
         #
@@ -150,7 +151,49 @@ class CalcSingleLimit:
           self.c.specifyUncertainty("lumi",mbname,"signal",1.046)
           self.c.specifyUncertainty("sigSyst",mbname,"signal",1.20) # to be corrected!
           self.c.specifyUncertainty("lumi",mbname,"other",1.046)
+      #
+      # correlations between MB/SR and MB/CR or SB/SR
+      #
+      for mbname in self.mbBinNames:
+        bname = mbname[2:]
+        mbnameC = mbname + "C"
+        mbnameS = mbname + "S"
+        mbres = self.subDict(self.bkgres,self.mbBins[mbname])
+        self.mbsigres = self.subDict(self.sigres,self.mbBins[mbname])
 
+        sbWname = "J3" + bname
+        sbWnameS = sbWname + "S"
+        sbWresS = self.subDict(self.bkgres,self.sbBins[sbWname])
+
+        sbttname = "J4" + bname
+        sbttnameS = sbttname + "S"
+        sbttresS = self.subDict(self.bkgres,self.sbBins[sbttname])
+        #
+        # correlation W regions: B and F / E and F
+        #
+        uncName = "corrWBF" + mbname
+        self.c.addUncertainty(uncName,"lnN")
+        self.c.specifyUncertainty(uncName,"J3"+bname+"S","W",self.corrSystSize)
+        self.c.specifyUncertainty(uncName,mbnameS,"W",self.corrSystSize)
+        uncName = "corrWEF" + mbname
+        self.c.addUncertainty(uncName,"lnN")
+        self.c.specifyUncertainty(uncName,mbnameC,"W",self.corrSystSize)
+        self.c.specifyUncertainty(uncName,mbnameS,"W",self.corrSystSize)
+        #
+        # correlation tt regions: D and F / E and F
+        #
+        uncName = "corrTTDF" + mbname
+        self.c.addUncertainty(uncName,"lnN")
+        self.c.specifyUncertainty(uncName,"J4"+bname+"S","tt",self.corrSystSize)
+        self.c.specifyUncertainty(uncName,mbnameS,"tt",self.corrSystSize)
+        uncName = "corrTTEF" + mbname
+        self.c.addUncertainty(uncName,"lnN")
+        self.c.specifyUncertainty(uncName,mbnameC,"tt",self.corrSystSize)
+        self.c.specifyUncertainty(uncName,mbnameS,"tt",self.corrSystSize)
+
+      #
+      # (anti-)correlations from fitted W/tt yields
+      #
       for mbname in self.mbBinNames:
         bname = mbname[2:]
         mbnameC = mbname + "C"
@@ -170,31 +213,37 @@ class CalcSingleLimit:
         sbttnameS = sbttname + "S"
         sbttresS = self.subDict(self.bkgres,self.sbBins[sbttname])
         #
-        # signal regions
+        # anticorrelated W/tt yields from fit 
+        # !*! need to change from error on yield to error on fraction since total normalization fluctuation
+        #     already accounted for!!!
+        # !*! should be correlated between MB SR and CR
         #
-        # correlation W regions: B and F / E and F
-        uncName = "corrWBF" + mbname
-        self.c.addUncertainty(uncName,"lnN")
-        self.c.specifyUncertainty(uncName,"J3"+bname+"S","W",self.corrSystSize)
-        self.c.specifyUncertainty(uncName,mbnameS,"W",self.corrSystSize)
-        uncName = "corrWEF" + mbname
-        self.c.addUncertainty(uncName,"lnN")
-        self.c.specifyUncertainty(uncName,mbnameC,"W",self.corrSystSize)
-        self.c.specifyUncertainty(uncName,mbnameS,"W",self.corrSystSize)
-        # correlation tt regions: D and F / E and F
-        uncName = "corrTTDF" + mbname
-        self.c.addUncertainty(uncName,"lnN")
-        self.c.specifyUncertainty(uncName,"J4"+bname+"S","tt",self.corrSystSize)
-        self.c.specifyUncertainty(uncName,mbnameS,"tt",self.corrSystSize)
-        uncName = "corrTTEF" + mbname
-        self.c.addUncertainty(uncName,"lnN")
-        self.c.specifyUncertainty(uncName,mbnameC,"tt",self.corrSystSize)
-        self.c.specifyUncertainty(uncName,mbnameS,"tt",self.corrSystSize)
-        # anticorrelated W/tt yields from fit
         uncName = "yWtt" + mbnameC
         self.c.addUncertainty(uncName,"lnN")
         self.c.specifyUncertainty(uncName,mbnameC,"W",relErrForLimit(mbres["yW_srNJet_0b_lowDPhi"],mbres["yW_Var_srNJet_0b_lowDPhi"]))
         self.c.specifyUncertainty(uncName,mbnameC,"tt",relErrForLimit(mbres["yTT_srNJet_0b_lowDPhi"],mbres["yTT_Var_srNJet_0b_lowDPhi"],-1))
+
+      #
+      # other systematics on (total) prediction in MB/SR
+      #
+      for mbname in self.mbBinNames:
+        bname = mbname[2:]
+        mbnameC = mbname + "C"
+        mbnameS = mbname + "S"
+        mbres = self.subDict(self.bkgres,self.mbBins[mbname])
+        self.mbsigres = self.subDict(self.sigres,self.mbBins[mbname])
+
+        sbWname = "J3" + bname
+        # sbWnameC = sbWnameBase + "C"
+        # sbWresC = self.subDict(self.bkgres,self.sbBins[sbWnameC])
+        sbWnameS = sbWname + "S"
+        sbWresS = self.subDict(self.bkgres,self.sbBins[sbWname])
+
+        sbttname = "J4" + bname
+        # sbttnameC = sbttnameBase + "C"
+        # sbttresC = self.subDict(self.bkgres,self.sbBins[sbttname])
+        sbttnameS = sbttname + "S"
+        sbttresS = self.subDict(self.bkgres,self.sbBins[sbttname])
         # uncertainty on kappas
         uncName = "kappa" + mbnameS
         self.c.addUncertainty(uncName,"lnN")
