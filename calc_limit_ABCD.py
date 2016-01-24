@@ -230,11 +230,11 @@ sbBinNames = [ ]
 sbBins = { }
 mbBinNames = [ ]
 mbBins = { }
-for njet in njetBins[:1]:
-  for lt in ltBins[:1]:
+for njet in njetBins[:]:
+  for lt in ltBins[:]:
     if not lt in bkgres[njet]:
       continue
-    for ht in htBins[:1]:
+    for ht in htBins[:]:
       if not ht in bkgres[njet][lt]:
         continue
       dphiLimit = dphiLimitToLabel(regionToDPhi[njet][lt][ht])
@@ -258,7 +258,10 @@ for njet in njetBins[:1]:
 print mbBinNames
 print sbBinNames                
 
-for signal in signals[:]:
+for signal in signals[-1:]:
   print signal
   calc = CalcSingleLimit(bkgres,sbBinNames,sbBins,mbBinNames,mbBins,sigres,signal)
+  calc.name = "limit_"+str(signal["mglu"])+"_"+str(signal["mlsp"])
+  calc.runLimit = True
+  calc.useBins = [ 0 ]
   calc.limitSinglePoint()

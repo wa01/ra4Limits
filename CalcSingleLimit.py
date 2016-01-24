@@ -13,6 +13,9 @@ class CalcSingleLimit:
 
     def __init__(self,bkgres,sbBinNames,sbBins,mbBinNames,mbBins,sigres,signal):
 
+        self.name = "calc_single_limit"
+        self.runLimit = False
+        self.useBins = range(len(mbBinNames))
         self.corrSystSize = 1000.00
         self.procNames = [ "W", "tt", "other", "QCD" ]
 
@@ -33,6 +36,7 @@ class CalcSingleLimit:
         self.c.maxUncNameWidth = 17
         self.c.maxUncStrWidth = 15
 
+        print "sbBin keys",sbBins.keys()
 
     def subDict(self,d,bins):
         return d[bins[0]][bins[1]][bins[2]]
@@ -42,10 +46,22 @@ class CalcSingleLimit:
 
     def limitSinglePoint(self):
 
+      mbBinNames = [ ]
+      for i,n in enumerate(self.mbBinNames):
+          if i in self.useBins:
+              mbBinNames.append(n)
+      sbBinNames = [ ]
+      for n in self.sbBinNames:
+          for m in mbBinNames:
+              if n[2:]==m[2:]:
+                  sbBinNames.append(n)
+                  break
+      print "Using mb bins ",mbBinNames
+      print "Using sb bins ",sbBinNames
       #
       # bin definition; observed and expected counts
       #
-      for sbname in self.sbBinNames:
+      for sbname in sbBinNames:
         sbnameS = sbname + "S"
         self.c.addBin(sbnameS,self.procNames,sbnameS)
         sbres = self.subDict(self.bkgres,self.sbBins[sbname])
@@ -92,7 +108,7 @@ class CalcSingleLimit:
           self.c.specifyExpectation(sbnameS,"other",0.001) # others are neglected in yield
           self.c.specifyExpectation(sbnameS,"QCD",0.001)
 
-      for mbname in self.mbBinNames:
+      for mbname in mbBinNames:
         mbres = self.subDict(self.bkgres,self.mbBins[mbname])
         self.mbsigres = self.subDict(self.sigres,self.mbBins[mbname])
         #
@@ -139,12 +155,12 @@ class CalcSingleLimit:
       self.c.addUncertainty("btag","lnN")
       self.c.addUncertainty("lumi","lnN")
       self.c.addUncertainty("sigSyst","lnN")
-      for bname in self.sbBinNames:
+      for bname in sbBinNames:
         sbname = bname + "S"
         self.c.specifyUncertainty("lumi",sbname,"signal",1.046)
         self.c.specifyUncertainty("sigSyst",sbname,"signal",1.20) # to be corrected!
         self.c.specifyUncertainty("lumi",sbname,"other",1.046)
-      for bname in self.mbBinNames:
+      for bname in mbBinNames:
         for r in [ "C", "S" ]:
           mbname = bname + r
           print mbname
@@ -154,7 +170,7 @@ class CalcSingleLimit:
       #
       # correlations between MB/SR and MB/CR or SB/SR
       #
-      for mbname in self.mbBinNames:
+      for mbname in mbBinNames:
         bname = mbname[2:]
         mbnameC = mbname + "C"
         mbnameS = mbname + "S"
@@ -194,7 +210,7 @@ class CalcSingleLimit:
       #
       # (anti-)correlations from fitted W/tt yields
       #
-      for mbname in self.mbBinNames:
+      for mbname in mbBinNames:
         bname = mbname[2:]
         mbnameC = mbname + "C"
         mbnameS = mbname + "S"
@@ -226,7 +242,7 @@ class CalcSingleLimit:
       #
       # other systematics on (total) prediction in MB/SR
       #
-      for mbname in self.mbBinNames:
+      for mbname in mbBinNames:
         bname = mbname[2:]
         mbnameC = mbname + "C"
         mbnameS = mbname + "S"
@@ -266,8 +282,10 @@ class CalcSingleLimit:
       #      self.c.addUncertainty(uncName,"lnN")
       #      self.c.specifyUncertainty(uncName,mbnameS,"W",1+worstCaseSyst[self.mbBins[mbname][0]][self.mbBins[mbname][1]][self.mbBins[mbname][2]])
 
-
-      for sbname in self.sbBinNames:
+      #
+      # SB related systematics propagated to MB
+      #
+      for sbname in sbBinNames:
         sbres = self.subDict(self.bkgres,self.sbBins[sbname])
         sbnameC = sbname + "C"
         sbnameS = sbname + "S"
@@ -277,7 +295,7 @@ class CalcSingleLimit:
         unc = 1. + 1./sqrt(obs)
         uncName = "stat" + sbnameC
         self.c.addUncertainty(uncName,"lnN")
-        for mbname in self.mbBinNames:
+        for mbname in mbBinNames:
           bname = mbname[2:]
           mbnameS = mbname + "S"
           if "J3"+bname+"C"==sbname:
@@ -292,27 +310,23 @@ class CalcSingleLimit:
                                                                  sbres["yW_Var_crNJet_0b_highDPhi"]))
           self.c.specifyUncertainty(uncName,sbnameS,"tt",relErrForLimit(sbres["yTT_crNJet_0b_highDPhi"], \
                                                                     sbres["yTT_Var_crNJet_0b_highDPhi"],-1))
-          if uncName=="yWttJ3L3H1D2S":
-            print sbres["yW_crNJet_0b_highDPhi"],sbres["yW_Var_crNJet_0b_highDPhi"], \
-                relErrForLimit(sbres["yW_crNJet_0b_highDPhi"],sbres["yW_Var_crNJet_0b_highDPhi"])
-            print sbres["yTT_crNJet_0b_highDPhi"],sbres["yTT_Var_crNJet_0b_highDPhi"], \
-                relErrForLimit(sbres["yTT_crNJet_0b_highDPhi"],sbres["yTT_Var_crNJet_0b_highDPhi"],-1)
 
       #
       # QCD
       #
-      #  for bname in self.mbBinNames:
+      #  for bname in mbBinNames:
       #    if bname.endswith("C"):
       #      self.c.addUncertainty(uncName,"lnN")
       #      self.c.specifyUncertainty(uncName,bname,"QCD",relErrForLimit()
       #    self.c.specifyUncertainty("sigSyst",bname,"signal",1.20)
       #    self.c.specifyUncertainty("lumi",bname,"other",1.046)
 
-      self.c.writeToFile("calc_limit.txt")
+      txtname = self.name + ".txt"
+      self.c.writeToFile(txtname)
       #
       # comments
       #
-      txt = open("calc_limit.txt","a")
+      txt = open(txtname,"a")
       txt.write("#\n")
       txt.write("# List of uncertainties\n")
       txt.write("#\n")
@@ -328,11 +342,11 @@ class CalcSingleLimit:
       txt.write("# lumi .............. luminosity\n")
       txt.write("# sigSyst ........... approximated total signal systematics")
       txt.close()
-      return
 
-      stdout = sys.stdout
-      sys.stdout = open("results.log","a")
-      print 'Result ',self.mbBinNames[0]," , ",signal["name"]," : ",self.c.calcLimit(options="--run blind")
-      sys.stdout.close()
-      sys.stdout = stdout
+      if self.runLimit:
+          stdout = sys.stdout
+          sys.stdout = open(self.name+".log","a")
+          print 'Result ',mbBinNames[0]," , ",self.signal["name"]," : ",self.c.calcLimit(options="--run blind")
+          sys.stdout.close()
+          sys.stdout = stdout
 
