@@ -38,11 +38,9 @@ class CalcSingleLimit:
         return d[bins[0]][bins[1]][bins[2]]
 
     def sigSubDict(self,d):
-        return d["signal"][self.mglu][self.mlsp]
+        return d["signals"][self.mglu][self.mlsp]
 
     def limitSinglePoint(self):
-
-
 
       #
       # define bins
@@ -50,8 +48,8 @@ class CalcSingleLimit:
       for sbname in self.sbBinNames:
         sbnameS = sbname + "S"
         self.c.addBin(sbnameS,self.procNames,sbnameS)
-        sbres = self.bkgres[self.sbBins[sbname][0]][self.sbBins[sbname][1]][self.sbBins[sbname][2]]
-        self.sbsigres = self.sigres[self.sbBins[sbname][0]][self.sbBins[sbname][1]][self.sbBins[sbname][2]]
+        sbres = self.subDict(self.bkgres,self.sbBins[sbname])
+        self.sbsigres = self.subDict(self.sigres,self.sbBins[sbname])
         r = "S"
         rDPhi = "low" if r=="C" else "high"
         rDPhi += "DPhi"
@@ -74,7 +72,7 @@ class CalcSingleLimit:
               sbres["yTT_crNJet_0b_"+rDPhi+"_truth"] + \
               sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
           self.c.specifyObservation(sbnameS,int(y_truth+0.5))
-          self.c.specifyExpectation(sbnameS,"signal",self.sbsigres["signals"][self.mglu][self.mlsp]['yield_SB_W_SR'])
+          self.c.specifyExpectation(sbnameS,"signal",self.sigSubDict(self.sbsigres)['yield_SB_W_SR'])
         #      self.c.specifyExpectation(sbnameS,"W",sbres["y_crNJet_0b_"+rDPhi]-sbres["yTT_crNJet_0b_"+rDPhi])
           self.c.specifyExpectation(sbnameS,"W",sbres["yW_crNJet_0b_"+rDPhi])
           self.c.specifyExpectation(sbnameS,"tt",sbres["yTT_crNJet_0b_"+rDPhi])
@@ -87,7 +85,7 @@ class CalcSingleLimit:
               sbres["yTT_crNJet_1b_"+rDPhi+"_truth"] + \
               sbres["yRest_crNJet_1b_"+rDPhi+"_truth"]
           self.c.specifyObservation(sbnameS,int(y_truth+0.5))
-          self.c.specifyExpectation(sbnameS,"signal",self.sbsigres["signals"][self.mglu][self.mlsp]['yield_SB_tt_SR'])
+          self.c.specifyExpectation(sbnameS,"signal",self.sigSubDict(self.sbsigres)['yield_SB_tt_SR'])
           self.c.specifyExpectation(sbnameS,"W",0.001)
           self.c.specifyExpectation(sbnameS,"tt",sbres["y_crNJet_1b_"+rDPhi])
           self.c.specifyExpectation(sbnameS,"other",0.001) # others are neglected in yield
@@ -95,8 +93,8 @@ class CalcSingleLimit:
 
 
       for mbname in self.mbBinNames:
-        mbres = self.bkgres[self.mbBins[mbname][0]][self.mbBins[mbname][1]][self.mbBins[mbname][2]]
-        self.mbsigres = self.sigres[self.mbBins[mbname][0]][self.mbBins[mbname][1]][self.mbBins[mbname][2]]
+        mbres = self.subDict(self.bkgres,self.mbBins[mbname])
+        self.mbsigres = self.subDict(self.sigres,self.mbBins[mbname])
         #
         # low dPhi
         #
@@ -110,7 +108,7 @@ class CalcSingleLimit:
             mbres["yQCD_srNJet_0b_"+rDPhi+"_truth"]
         self.c.specifyObservation(mbnameC,int(y_truth+0.5))
         # expectation
-        self.c.specifyExpectation(mbnameC,"signal",self.mbsigres["signals"][self.mglu][self.mlsp]['yield_MB_CR']) # to be corrected!
+        self.c.specifyExpectation(mbnameC,"signal",self.sigSubDict(self.mbsigres)['yield_MB_CR']) # to be corrected!
         self.c.specifyExpectation(mbnameC,"tt",mbres["yTT_srNJet_0b_"+rDPhi])
         self.c.specifyExpectation(mbnameC,"W",mbres["yW_srNJet_0b_"+rDPhi])
         self.c.specifyExpectation(mbnameC,"other",mbres["yRest_srNJet_0b_"+rDPhi+"_truth"])
@@ -127,7 +125,7 @@ class CalcSingleLimit:
         y_truth = mbres["W_truth"] +  mbres["TT_truth"] + mbres["Rest_truth"]
         self.c.specifyObservation(mbnameS,int(y_truth+0.5))
         # expectation
-        self.c.specifyExpectation(mbnameS,"signal",self.mbsigres["signals"][self.mglu][self.mlsp]['yield_MB_SR']) # to be corrected!
+        self.c.specifyExpectation(mbnameS,"signal",self.sigSubDict(self.mbsigres)['yield_MB_SR']) # to be corrected!
         self.c.specifyExpectation(mbnameS,"tt",mbres["TT_pred"])
         self.c.specifyExpectation(mbnameS,"W",mbres["W_pred"])
         self.c.specifyExpectation(mbnameS,"other",mbres["Rest_truth"])
@@ -157,20 +155,20 @@ class CalcSingleLimit:
         bname = mbname[2:]
         mbnameC = mbname + "C"
         mbnameS = mbname + "S"
-        mbres = self.bkgres[self.mbBins[mbname][0]][self.mbBins[mbname][1]][self.mbBins[mbname][2]]
-        self.mbsigres = self.sigres[self.mbBins[mbname][0]][self.mbBins[mbname][1]][self.mbBins[mbname][2]]
+        mbres = self.subDict(self.bkgres,self.mbBins[mbname])
+        self.mbsigres = self.subDict(self.sigres,self.mbBins[mbname])
 
         sbWname = "J3" + bname
         # sbWnameC = sbWnameBase + "C"
-        # sbWresC = self.bkgres[self.sbBins[sbWnameC][0]][self.sbBins[sbWnameC][1]][self.sbBins[sbWnameC][2]]
+        # sbWresC = self.subDict(self.bkgres,self.sbBins[sbWnameC])
         sbWnameS = sbWname + "S"
-        sbWresS = self.bkgres[self.sbBins[sbWname][0]][self.sbBins[sbWname][1]][self.sbBins[sbWname][2]]
+        sbWresS = self.subDict(self.bkgres,self.sbBins[sbWname])
 
         sbttname = "J4" + bname
         # sbttnameC = sbttnameBase + "C"
-        # sbttresC = self.bkgres[self.sbBins[sbttnameC][0]][self.sbBins[sbttnameC][1]][self.sbBins[sbttnameC][2]]
+        # sbttresC = self.subDict(self.bkgres,self.sbBins[sbttname])
         sbttnameS = sbttname + "S"
-        sbttresS = self.bkgres[self.sbBins[sbttname][0]][self.sbBins[sbttname][1]][self.sbBins[sbttname][2]]
+        sbttresS = self.subDict(self.bkgres,self.sbBins[sbttname])
         #
         # signal regions
         #
@@ -213,7 +211,7 @@ class CalcSingleLimit:
         # stat. uncertainty on signal efficiency
         uncName = "statSeff" + mbnameS
         self.c.addUncertainty(uncName,"lnN")
-        self.c.specifyUncertainty(uncName,mbnameS,"signal",1+self.mbsigres["signals"][self.mglu][self.mlsp]["err_MB_SR"])
+        self.c.specifyUncertainty(uncName,mbnameS,"signal",1+self.sigSubDict(self.mbsigres)["err_MB_SR"])
       #      # WORST CASE SYST
       #      uncName = "worst"+mbnameS
       #      self.c.addUncertainty(uncName,"lnN")
@@ -221,7 +219,7 @@ class CalcSingleLimit:
 
 
       for sbname in self.sbBinNames:
-        sbres = self.bkgres[self.sbBins[sbname][0]][self.sbBins[sbname][1]][self.sbBins[sbname][2]]
+        sbres = self.subDict(self.bkgres,self.sbBins[sbname])
         sbnameC = sbname + "C"
         sbnameS = sbname + "S"
         # statistical uncertainty SB CRs
