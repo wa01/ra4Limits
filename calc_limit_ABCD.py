@@ -168,7 +168,8 @@ lumi_origin = 3
 
 #res = pickle.load(file(os.path.expandvars("singleLeptonic_Spring15__estimationResults_pkl_kappa_corrected-150116.pkl")))
 sigres = pickle.load(file(os.path.expandvars("resultsFinal_withSystematics_andSignals_NewStructure_150120.pkl")))
-bkgres = pickle.load(file(os.path.expandvars("resultsFinal_withSystematics_150121.pkl")))
+#sigres = pickle.load(file(os.path.expandvars("pickles150121/allSignals_2p3_pkl")))
+bkgres = pickle.load(file(os.path.expandvars("pickles150121/resultsFinal_withSystematics_pkl")))
 
 #pdg = 'pos'
 #pdg = 'neg'
@@ -258,10 +259,10 @@ for njet in njetBins[:]:
 print mbBinNames
 print sbBinNames                
 
-for signal in signals[-1:]:
+for signal in signals[:]:
   print signal
   calc = CalcSingleLimit(bkgres,sbBinNames,sbBins,mbBinNames,mbBins,sigres,signal)
   calc.name = "limit_"+str(signal["mglu"])+"_"+str(signal["mlsp"])
   calc.runLimit = True
-  calc.useBins = [ 0 ]
+#  calc.useBins = [ 0 ]
   calc.limitSinglePoint()

@@ -16,7 +16,7 @@ class CalcSingleLimit:
         self.name = "calc_single_limit"
         self.runLimit = False
         self.useBins = range(len(mbBinNames))
-        self.corrSystSize = 1000.00
+        self.corrSystSize = 100.0
         self.procNames = [ "W", "tt", "other", "QCD" ]
 
         self.bkgres = bkgres
@@ -35,8 +35,6 @@ class CalcSingleLimit:
         self.c.precision=3
         self.c.maxUncNameWidth = 17
         self.c.maxUncStrWidth = 15
-
-        print "sbBin keys",sbBins.keys()
 
     def subDict(self,d,bins):
         return d[bins[0]][bins[1]][bins[2]]
@@ -163,7 +161,6 @@ class CalcSingleLimit:
       for bname in mbBinNames:
         for r in [ "C", "S" ]:
           mbname = bname + r
-          print mbname
           self.c.specifyUncertainty("lumi",mbname,"signal",1.046)
           self.c.specifyUncertainty("sigSyst",mbname,"signal",1.20) # to be corrected!
           self.c.specifyUncertainty("lumi",mbname,"other",1.046)
@@ -188,22 +185,22 @@ class CalcSingleLimit:
         # correlation W regions: B and F / E and F
         #
         uncName = "corrWBF" + mbname
-        self.c.addUncertainty(uncName,"lnN")
+        self.c.addUncertainty(uncName,"lnU")
         self.c.specifyUncertainty(uncName,"J3"+bname+"S","W",self.corrSystSize)
         self.c.specifyUncertainty(uncName,mbnameS,"W",self.corrSystSize)
         uncName = "corrWEF" + mbname
-        self.c.addUncertainty(uncName,"lnN")
+        self.c.addUncertainty(uncName,"lnU")
         self.c.specifyUncertainty(uncName,mbnameC,"W",self.corrSystSize)
         self.c.specifyUncertainty(uncName,mbnameS,"W",self.corrSystSize)
         #
         # correlation tt regions: D and F / E and F
         #
         uncName = "corrTTDF" + mbname
-        self.c.addUncertainty(uncName,"lnN")
+        self.c.addUncertainty(uncName,"lnU")
         self.c.specifyUncertainty(uncName,"J4"+bname+"S","tt",self.corrSystSize)
         self.c.specifyUncertainty(uncName,mbnameS,"tt",self.corrSystSize)
         uncName = "corrTTEF" + mbname
-        self.c.addUncertainty(uncName,"lnN")
+        self.c.addUncertainty(uncName,"lnU")
         self.c.specifyUncertainty(uncName,mbnameC,"tt",self.corrSystSize)
         self.c.specifyUncertainty(uncName,mbnameS,"tt",self.corrSystSize)
 
