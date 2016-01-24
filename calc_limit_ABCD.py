@@ -190,15 +190,15 @@ for nj in njetBins:
         htBins.append(ht)
 ltBins.sort()
 htBins.sort()
-print njetBins
-print ltBins
-print htBins
-for njet in njetBins:
-  print njetBinToLabel(njet)
-for lt in ltBins:
-  print ltBinToLabel(lt)
-for ht in htBins:
-  print htBinToLabel(ht)
+#print njetBins
+#print ltBins
+#print htBins
+#for njet in njetBins:
+#  print njetBinToLabel(njet)
+#for lt in ltBins:
+#  print ltBinToLabel(lt)
+#for ht in htBins:
+#  print htBinToLabel(ht)
 
 signals = [
           {'color': ROOT.kBlue ,'name': 's1500' , 'mglu' : 1500, 'mlsp' : 100, 'label': 'T5q^{4} 1.5/0.8/0.1'}, \
@@ -259,10 +259,10 @@ for njet in njetBins[:]:
 print mbBinNames
 print sbBinNames                
 
-for signal in signals[:]:
+for signal in signals[-1:]:
   print signal
   calc = CalcSingleLimit(bkgres,sbBinNames,sbBins,mbBinNames,mbBins,sigres,signal)
   calc.name = "limit_"+str(signal["mglu"])+"_"+str(signal["mlsp"])
   calc.runLimit = True
-#  calc.useBins = [ 0 ]
+  calc.useBins = [ 0 ]
   calc.limitSinglePoint()
