@@ -7,6 +7,7 @@ import pickle
 #import array
 from Workspace.RA4Analysis.signalRegions import *
 from CalcSingleLimit import *
+import argparse
 
 regionToDPhi = {
   (5, 5) : {
@@ -137,9 +138,24 @@ def htBinToLabel(htBin):
   return "H"+str(idxs[0])
 #  return "H"+"".join([str(x) for x in range(idxs[0],idxs[1])])
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--nolimit', help='d not run limit', action='store_true')
+parser.add_argument('--bins', help='list of bin indices to be used', 
+                    dest='bins', default=None)
+args = parser.parse_args()
+useBinIndices = set()
+if args.bins!=None:
+  for f in args.bins.split(","):
+    if f.find("-")>=0:
+      gs = f.split("-")
+      assert len(gs)==2
+      for i in range(int(gs[0]),int(gs[1])+1):
+        useBinIndices.add(i)
+    else:
+        useBinIndices.add(int(f))
   
-ROOT.gROOT.LoadMacro("$CMSSW_BASE/src/Workspace/HEPHYPythonTools/scripts/root/tdrstyle.C")
-ROOT.setTDRStyle()
+#ROOT.gROOT.LoadMacro("$CMSSW_BASE/src/Workspace/HEPHYPythonTools/scripts/root/tdrstyle.C")
+#ROOT.setTDRStyle()
 
 path = os.environ["HOME"]+"/www/combine_tests/"
 if not os.path.exists(path):
@@ -169,7 +185,8 @@ lumi_origin = 3
 #res = pickle.load(file(os.path.expandvars("singleLeptonic_Spring15__estimationResults_pkl_kappa_corrected-150116.pkl")))
 sigres = pickle.load(file(os.path.expandvars("resultsFinal_withSystematics_andSignals_NewStructure_150120.pkl")))
 #sigres = pickle.load(file(os.path.expandvars("pickles150121/allSignals_2p3_pkl")))
-bkgres = pickle.load(file(os.path.expandvars("pickles150121/resultsFinal_withSystematics_pkl")))
+#bkgres = pickle.load(file(os.path.expandvars("pickles150121/resultsFinal_withSystematics_pkl")))
+bkgres = pickle.load(file(os.path.expandvars("pickles150125/resultsFinal_withSystematics_pkl")))
 
 #pdg = 'pos'
 #pdg = 'neg'
@@ -263,6 +280,7 @@ for signal in signals[-1:]:
   print signal
   calc = CalcSingleLimit(bkgres,sbBinNames,sbBins,mbBinNames,mbBins,sigres,signal)
   calc.name = "limit_"+str(signal["mglu"])+"_"+str(signal["mlsp"])
-  calc.runLimit = True
-  calc.useBins = [ 0 ]
+  calc.runLimit = not args.nolimit
+  if args.bins!=None:
+    calc.useBins = sorted(useBinIndices)
   calc.limitSinglePoint()
