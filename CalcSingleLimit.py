@@ -2,6 +2,7 @@ from cardFileWriter import cardFileWriter
 #from limit_helper import plotsignif , plotLimit , signal_bins_3fb
 from math import exp,sqrt
 import os,sys
+import ROOT
 
 def relErrForLimit(value,variance,sign=1):
     result = 1.+sign*sqrt(variance)/value
@@ -9,6 +10,37 @@ def relErrForLimit(value,variance,sign=1):
         result = 0.01
     return result
 
+def errorsOnFraction(yields,errYields):
+    ny = len(yields)
+    assert ny==len(errYields)
+    sy = sum(yields)
+    a = ROOT.TMatrixD(ny,ny)
+    c = ROOT.TMatrixDSym(ny)
+    for i in range(ny):
+        rai = ROOT.TMatrixDRow(a,i)
+        rci = ROOT.TMatrixDRow(c,i)
+        for j in range(ny):
+            if j==i:
+                rci[j] = errYields[i]**2
+            else:
+                rci[j] = 0.
+            raj = ROOT.TMatrixDRow(a,i)
+            v = -yields[i]
+            if j==i:
+                v += sy
+            v /= sy*sy
+            rai[j] = v
+    d = c.Similarity(a)
+#    for i in range(ny):
+#        line = ""
+#        for j in range(ny):
+#            if j==i:
+#                line += "{0:8.4f}".format(sqrt(d[i][j]))
+#            else:
+#                line += "{0:8.4f}".format(d[i][j]/sqrt(d[i][i]*d[j][j]))
+#        print line
+            
+    
 class CalcSingleLimit:
 
     def __init__(self,bkgres,sbBinNames,sbBins,mbBinNames,mbBins,sigres,signal):
