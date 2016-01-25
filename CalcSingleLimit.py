@@ -352,8 +352,10 @@ class CalcSingleLimit:
         self.c.addUncertainty("kappab"+mbnameS,"lnN")
         self.c.specifyUncertainty("kappab"+mbnameS,mbnameS,"tt",1.+mbres["systematics"]["kappa_b"])
         # Rcs systematics W and tt ("linear fit")
-        self.c.specifyUncertainty("rcsLinearW"+mbnameS,mbnameS,"W",1.+mbres["systematics"]["rcs_w"])
-        self.c.specifyUncertainty("rcsLinearTT"+mbnameS,mbnameS,"tt",1.+mbres["systematics"]["rcs_tt"])
+        self.c.addUncertainty("rcsW"+mbnameS,"lnN")
+        self.c.specifyUncertainty("rcsW"+mbnameS,mbnameS,"W",1.+mbres["systematics"]["rcs_W"])
+        self.c.addUncertainty("rcsTT"+mbnameS,"lnN")
+        self.c.specifyUncertainty("rcsTT"+mbnameS,mbnameS,"tt",1.+mbres["systematics"]["rcs_tt"])
         # QCD systematics
         self.c.addUncertainty("QCD"+mbnameS,"lnN")
         self.c.specifyUncertainty("QCD"+mbnameS,mbnameS,"W",1.+mbres["systematics"]["QCD"])
@@ -367,9 +369,9 @@ class CalcSingleLimit:
         # PU systematics
         if not "PU" in self.c.uncertainties:
             self.c.addUncertainty("PU","lnN")
-        self.c.specifyUncertainty("PU",mbnameS,"W",1.+mbres["systematics"]["PU"])
-        self.c.specifyUncertainty("PU",mbnameS,"tt",1.+mbres["systematics"]["PU"])
-        self.c.specifyUncertainty("PU",mbnameS,"other",1.+mbres["systematics"]["PU"])
+        self.c.specifyUncertainty("PU",mbnameS,"W",1.+mbres["systematics"]["pileup"])
+        self.c.specifyUncertainty("PU",mbnameS,"tt",1.+mbres["systematics"]["pileup"])
+        self.c.specifyUncertainty("PU",mbnameS,"other",1.+mbres["systematics"]["pileup"])
         # Cross sections & W polarization
         if not "xsecW" in self.c.uncertainties:
             self.c.addUncertainty("xsecW","lnN")
