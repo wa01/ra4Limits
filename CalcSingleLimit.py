@@ -1,6 +1,6 @@
 from cardFileWriter import cardFileWriter
 #from limit_helper import plotsignif , plotLimit , signal_bins_3fb
-from math import exp,sqrt
+from math import exp,sqrt,isnan
 import os,sys
 import ROOT
 
@@ -290,8 +290,13 @@ class CalcSingleLimit:
         #
         ys = [ mbres["yW_srNJet_0b_lowDPhi"], mbres["yTT_srNJet_0b_lowDPhi"], \
                    mbres["yRest_srNJet_0b_lowDPhi_truth"],  mbres["yQCD_srNJet_0b_lowDPhi"] ]
+        # temporary fix for QCD variance 
+        vQCD = mbres["yQCD_Var_srNJet_0b_lowDPhi"]
+        if isnan(vQCD):
+            print "Replacing nan for yQCD_Var_srNJet_0b_lowDPhi in ",mbnameC
+            vQCD =  mbres["yQCD_srNJet_0b_lowDPhi"]**2
         vys = [ mbres["yW_Var_srNJet_0b_lowDPhi"], mbres["yTT_Var_srNJet_0b_lowDPhi"], \
-                   mbres["yRest_Var_srNJet_0b_lowDPhi_truth"],  mbres["yQCD_Var_srNJet_0b_lowDPhi"] ]
+                   mbres["yRest_Var_srNJet_0b_lowDPhi_truth"],  vQCD ]
         fracErrs = relErrorsOnFractions(ys,vys)
         uncName = "yWtt" + mbnameC
         self.c.addUncertainty(uncName,"lnN")
@@ -439,7 +444,7 @@ class CalcSingleLimit:
       txt.write("# yWttJ[34]LyHzDuS .. anti-correlated W/tt fraction fit systematics in W SB highDPhi\n")
       txt.write("# yWttJ[34]LyHzDuC ?? anti-correlated W/tt fraction fit systematics in W SB lowDPhi\n")
       txt.write("# lumi .............. luminosity\n")
-      txt.write("# sigSyst ........... approximated total signal systematics")
+      txt.write("# sigSyst ........... approximated total signal systematics\n")
       txt.close()
 
       if self.runLimit:
