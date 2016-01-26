@@ -51,6 +51,7 @@ class CalcSingleLimit:
 
         self.name = "calc_single_limit"
         self.runLimit = False
+        self.runBlind = False
         self.useBins = range(len(mbBinNames))
         self.corrSystSize = 100.0
         self.procNames = [ "W", "tt", "other", "QCD" ]
@@ -104,12 +105,12 @@ class CalcSingleLimit:
         #
         # debug
         #
-        if sbname.startswith("J4"):
-            numerator = sbres["y_crNJet_1b_highDPhi"] - sbres["yQCD_crNJet_1b_highDPhi"]
-            denominator = sbres["y_crNJet_1b_lowDPhi"] - sbres["yQCD_crNJet_1b_lowDPhi"]
-            print "ttbar SB :",numerator,denominator,numerator/denominator,sbres["rCS_crLowNJet_1b"]
-            print sbres["rCS_crLowNJet_1b"]["rCS"],sbres["rCS_crLowNJet_1b_kappa"]["rCS"], \
-                sbres["rCS_crLowNJet_1b_onlyTT"]["rCS"],sbres["rCS_srNJet_0b_onlyTT"]["rCS"]
+        #if sbname.startswith("J4"):
+        #    numerator = sbres["y_crNJet_1b_highDPhi"] - sbres["yQCD_crNJet_1b_highDPhi"]
+        #    denominator = sbres["y_crNJet_1b_lowDPhi"] - sbres["yQCD_crNJet_1b_lowDPhi"]
+        #    print "ttbar SB :",numerator,denominator,numerator/denominator,sbres["rCS_crLowNJet_1b"]
+        #    print sbres["rCS_crLowNJet_1b"]["rCS"],sbres["rCS_crLowNJet_1b_kappa"]["rCS"], \
+        #        sbres["rCS_crLowNJet_1b_onlyTT"]["rCS"],sbres["rCS_srNJet_0b_onlyTT"]["rCS"]
         #
 
 
@@ -136,12 +137,11 @@ class CalcSingleLimit:
         if sbnameS[:2]=="J3":
           # observation
           # currently: derive from truth (!*! assume no QCD in SB/SR)
-          y_truth = sbres["yW_crNJet_0b_"+rDPhi+"_truth"] + \
-              sbres["yTT_crNJet_0b_"+rDPhi+"_truth"] + \
-              sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
+          #y_truth = sbres["yW_crNJet_0b_"+rDPhi+"_truth"] + \
+          #    sbres["yTT_crNJet_0b_"+rDPhi+"_truth"] + \
+          #    sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
           self.c.specifyObservation(sbnameS,int(sbres["y_crNJet_0b_highDPhi"]+0.5))
           self.c.specifyExpectation(sbnameS,"signal",self.sigSubDict(self.sbsigres)['yield_SB_W_SR'])
-        #      self.c.specifyExpectation(sbnameS,"W",sbres["y_crNJet_0b_"+rDPhi]-sbres["yTT_crNJet_0b_"+rDPhi])
           self.c.specifyExpectation(sbnameS,"W",sbres["yW_crNJet_0b_"+rDPhi])
           self.c.specifyExpectation(sbnameS,"tt",sbres["yTT_crNJet_0b_"+rDPhi])
           self.c.specifyExpectation(sbnameS,"other",sbres["yRest_crNJet_0b_"+rDPhi+"_truth"])
@@ -151,9 +151,9 @@ class CalcSingleLimit:
         # 
         elif sbnameS[:2]=="J4":
           # observation
-          y_truth = sbres["yW_crNJet_1b_"+rDPhi+"_truth"] + \
-              sbres["yTT_crNJet_1b_"+rDPhi+"_truth"] + \
-              sbres["yRest_crNJet_1b_"+rDPhi+"_truth"]
+          #y_truth = sbres["yW_crNJet_1b_"+rDPhi+"_truth"] + \
+          #    sbres["yTT_crNJet_1b_"+rDPhi+"_truth"] + \
+          #    sbres["yRest_crNJet_1b_"+rDPhi+"_truth"]
           self.c.specifyObservation(sbnameS,int(sbres["y_crNJet_1b_highDPhi"]+0.5))
           self.c.specifyExpectation(sbnameS,"signal",self.sigSubDict(self.sbsigres)['yield_SB_tt_SR'])
           self.c.specifyExpectation(sbnameS,"W",0.001)
@@ -172,13 +172,13 @@ class CalcSingleLimit:
         self.c.addBin(mbnameC,self.procNames,mbnameC)
         rDPhi = "lowDPhi"
         # observation
-        y_truth = mbres["yW_srNJet_0b_"+rDPhi+"_truth"] + \
-            mbres["yTT_srNJet_0b_"+rDPhi+"_truth"] + \
-            mbres["yRest_srNJet_0b_"+rDPhi+"_truth"] + \
-            mbres["yQCD_srNJet_0b_"+rDPhi+"_truth"]
-        self.c.specifyObservation(mbnameC,int(y_truth+0.5)) # !*! to be corrected
+        #y_truth = mbres["yW_srNJet_0b_"+rDPhi+"_truth"] + \
+        #    mbres["yTT_srNJet_0b_"+rDPhi+"_truth"] + \
+        #    mbres["yRest_srNJet_0b_"+rDPhi+"_truth"] + \
+        #    mbres["yQCD_srNJet_0b_"+rDPhi+"_truth"]
+        self.c.specifyObservation(mbnameC,int(mbres["y_srNJet_0b_lowDPhi"]+0.5))
         # expectation
-        self.c.specifyExpectation(mbnameC,"signal",self.sigSubDict(self.mbsigres)['yield_MB_CR']) # to be corrected!
+        self.c.specifyExpectation(mbnameC,"signal",self.sigSubDict(self.mbsigres)['yield_MB_CR'])
         self.c.specifyExpectation(mbnameC,"tt",mbres["yTT_srNJet_0b_"+rDPhi])
         self.c.specifyExpectation(mbnameC,"W",mbres["yW_srNJet_0b_"+rDPhi])
         self.c.specifyExpectation(mbnameC,"other",mbres["yRest_srNJet_0b_"+rDPhi+"_truth"])
@@ -190,12 +190,12 @@ class CalcSingleLimit:
         self.c.addBin(mbnameS,self.procNames,mbnameS)
         rDPhi = "highDPhi"
         # observation
-        y_truth = mbres["W_truth"] +  mbres["TT_truth"] + mbres["Rest_truth"]
-        self.c.specifyObservation(mbnameS,int(y_truth+0.5)) # !*! to be corrected
+        #y_truth = mbres["W_truth"] +  mbres["TT_truth"] + mbres["Rest_truth"]
+        self.c.specifyObservation(mbnameS,int(mbres["y_srNJet_0b_highDPhi"]+0.5))
         # expectation
         self.c.specifyExpectation(mbnameS,"signal",self.sigSubDict(self.mbsigres)['yield_MB_SR'])
-        self.c.specifyExpectation(mbnameS,"tt",mbres["TT_pred"])
-        self.c.specifyExpectation(mbnameS,"W",mbres["W_pred"])
+        self.c.specifyExpectation(mbnameS,"tt",mbres["TT_pred_final"])
+        self.c.specifyExpectation(mbnameS,"W",mbres["W_pred_final"])
         self.c.specifyExpectation(mbnameS,"other",mbres["Rest_truth"])
         self.c.specifyExpectation(mbnameS,"QCD",0.001)
 
@@ -415,16 +415,47 @@ class CalcSingleLimit:
         for mbname in mbBinNames:
           bname = mbname[2:]
           mbnameS = mbname + "S"
-          if "J3"+bname+"C"==sbname:
+          if "J3"+bname==sbname:
               wYield = sbres["yW_crNJet_0b_lowDPhi"]
               wVar = sbres["yW_Var_crNJet_0b_lowDPhi"]
-              self.c.specifyUncertainty(uncName,mbname,"W",1.+sqrt(wVar)/wYield)
-          elif "J4"+bname+"C"==sbname:
-              ttYield = sbres["yTT_crNJet_1b_lowDPhi"]
-              ttVar = sbres["yTT_Var_crNJet_1b_lowDPhi"]
-              self.c.specifyUncertainty(uncName,mbname,"tt",1.+sqrt(ttVar)/ttYield)
+              self.c.specifyUncertainty(uncName,mbnameS,"W",1.+sqrt(wVar)/wYield)
+          elif "J4"+bname==sbname:
+              ttYield = sbres["y_crNJet_1b_lowDPhi"]
+              ttVar = sbres["y_crNJet_1b_lowDPhi"]
+              self.c.specifyUncertainty(uncName,mbnameS,"tt",1.+sqrt(ttVar)/ttYield)
 
 
+      #
+      # QCD uncertainties in CR / SB (!*! double counting?)
+      #
+      useAddQCD = False
+      if useAddQCD:
+          for sbname in sbBinNames:
+            sbnameS = sbname + "S"
+            sbres = self.subDict(self.bkgres,self.sbBins[sbname])
+            self.c.addUncertainty("qcd"+sbnameS,"lnN")
+            if sbname.startswith("J3"):
+                self.c.specifyUncertainty("qcd"+sbnameS,sbnameS,"QCD",2.0)
+            elif sbname.startswith("J4"):
+                vQCD = sbres["yQCD_Var_crNJet_1b_highDPhi"]
+                if isnan(vQCD):
+                    print "Replacing nan for sbres yQCD_Var_crNJet_1b_highDPhi in ",sbnameS
+                    vQCD =  sbres["yQCD_crNJet_1b_highDPhi"]**2
+                print "QCD",sbname,sbres["yQCD_crNJet_1b_highDPhi"],sbres["yQCD_Var_crNJet_1b_highDPhi"]
+                self.c.specifyUncertainty("qcd"+sbnameS,sbnameS,"QCD", \
+                                              relErrForLimit(sbres["yQCD_crNJet_1b_highDPhi"],vQCD))
+          for mbname in mbBinNames:
+            mbnameS = mbname + "C"
+            mbres = self.subDict(self.bkgres,self.mbBins[mbname])
+            self.c.addUncertainty("qcd"+mbnameC,"lnN")
+            # temporary fix for QCD variance 
+            vQCD = mbres["yQCD_Var_srNJet_0b_lowDPhi"]
+            if isnan(vQCD):
+                vQCD =  mbres["yQCD_srNJet_0b_lowDPhi"]**2
+            self.c.specifyUncertainty("qcd"+mbnameC,mbnameC,"QCD", \
+                                          relErrForLimit(sbres["yQCD_srNJet_0b_lowDPhi"],vQCD))
+
+          
       txtname = self.name + ".txt"
       self.c.writeToFile(txtname)
       #
@@ -450,7 +481,10 @@ class CalcSingleLimit:
       if self.runLimit:
           stdout = sys.stdout
           sys.stdout = open(self.name+".log","a")
-          print 'Result ',mbBinNames[0]," , ",self.signal["name"]," : ",self.c.calcLimit(options="--run blind")
+          opts = ""
+          if self.runBlind:
+              opts = "--run blind"
+          print 'Result ',mbBinNames[0]," , ",self.signal["name"],self.signal["mglu"],self.signal["mlsp"]," : ",self.c.calcLimit(options=opts)
           sys.stdout.close()
           sys.stdout = stdout
 
