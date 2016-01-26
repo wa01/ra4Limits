@@ -7,6 +7,7 @@ import pickle
 #import array
 from Workspace.RA4Analysis.signalRegions import *
 from CalcSingleLimit import *
+#from CalcLimitSRonly import *
 import argparse
 
 regionToDPhi = {
@@ -139,7 +140,8 @@ def htBinToLabel(htBin):
 #  return "H"+"".join([str(x) for x in range(idxs[0],idxs[1])])
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--nolimit', help='d not run limit', action='store_true')
+parser.add_argument('--nolimit', help='do not run limit', action='store_true')
+parser.add_argument('--blind', help='use blind mode', action='store_true')
 parser.add_argument('--bins', help='list of bin indices to be used', 
                     dest='bins', default=None)
 args = parser.parse_args()
@@ -195,16 +197,21 @@ bkgres = pickle.load(file(os.path.expandvars("pickles150125/resultsFinal_withSys
 #
 # consistency
 #
-njetBins = sorted(bkgres.keys())
+njetBins = [ ]
 ltBins = [ ]
 htBins = [ ]
-for nj in njetBins:
+for nj in bkgres.keys():
+  if type(nj)!=type(()):
+    print "Rejecting key",nj
+    continue
+  njetBins.append(nj)
   for lt in bkgres[nj]:
     if not lt in ltBins:
       ltBins.append(lt)
     for ht in bkgres[nj][lt]:
       if not ht in htBins:
         htBins.append(ht)
+njetBins.sort()
 ltBins.sort()
 htBins.sort()
 #print njetBins
@@ -276,11 +283,12 @@ for njet in njetBins[:]:
 print mbBinNames
 print sbBinNames                
 
-for signal in signals[-1:]:
+for signal in signals[:]:
   print signal
   calc = CalcSingleLimit(bkgres,sbBinNames,sbBins,mbBinNames,mbBins,sigres,signal)
   calc.name = "limit_"+str(signal["mglu"])+"_"+str(signal["mlsp"])
   calc.runLimit = not args.nolimit
+  calc.runBlind = args.blind
   if args.bins!=None:
     calc.useBins = sorted(useBinIndices)
   calc.limitSinglePoint()
