@@ -6,8 +6,6 @@ import ROOT
 import pickle
 #import array
 from Workspace.RA4Analysis.signalRegions import *
-from CalcSingleLimit import *
-#from CalcLimitSRonly import *
 import argparse
 
 regionToDPhi = {
@@ -142,8 +140,11 @@ def htBinToLabel(htBin):
 parser = argparse.ArgumentParser()
 parser.add_argument('--nolimit', help='do not run limit', action='store_true')
 parser.add_argument('--blind', help='use blind mode', action='store_true')
+parser.add_argument('--SRonly', help='use only SRs', action='store_true')
 parser.add_argument('--bins', help='list of bin indices to be used', 
                     dest='bins', default=None)
+parser.add_argument('--signals', help='list of signal indices to be used', 
+                    dest='signals', default=None)
 args = parser.parse_args()
 useBinIndices = set()
 if args.bins!=None:
@@ -155,6 +156,21 @@ if args.bins!=None:
         useBinIndices.add(i)
     else:
         useBinIndices.add(int(f))
+useSignalIndices = set()
+if args.signals!=None:
+  for f in args.signals.split(","):
+    if f.find("-")>=0:
+      gs = f.split("-")
+      assert len(gs)==2
+      for i in range(int(gs[0]),int(gs[1])+1):
+        useSignalIndices.add(i)
+    else:
+        useSignalIndices.add(int(f))
+
+if args.SRonly:
+  from CalcLimitSRonly import *
+else:
+  from CalcSingleLimit import *
   
 #ROOT.gROOT.LoadMacro("$CMSSW_BASE/src/Workspace/HEPHYPythonTools/scripts/root/tdrstyle.C")
 #ROOT.setTDRStyle()
@@ -283,7 +299,9 @@ for njet in njetBins[:]:
 print mbBinNames
 print sbBinNames                
 
-for signal in signals[:]:
+for isig,signal in enumerate(signals):
+  if args.signals!=None and not (isig in useSignalIndices):
+    continue
   print signal
   calc = CalcSingleLimit(bkgres,sbBinNames,sbBins,mbBinNames,mbBins,sigres,signal)
   calc.name = "limit_"+str(signal["mglu"])+"_"+str(signal["mlsp"])
