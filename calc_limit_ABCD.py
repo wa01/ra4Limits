@@ -204,6 +204,7 @@ lumi_origin = 3
 sigres = pickle.load(file(os.path.expandvars("resultsFinal_withSystematics_andSignals_NewStructure_150120.pkl")))
 #sigres = pickle.load(file(os.path.expandvars("pickles150121/allSignals_2p3_pkl")))
 #bkgres = pickle.load(file(os.path.expandvars("pickles150121/resultsFinal_withSystematics_pkl")))
+sigres = pickle.load(file(os.path.expandvars("pickles150125/allSignals_2p3_v2_pkl")))
 bkgres = pickle.load(file(os.path.expandvars("pickles150125/resultsFinal_withSystematics_pkl")))
 
 #pdg = 'pos'
@@ -298,6 +299,26 @@ for njet in njetBins[:]:
 
 print mbBinNames
 print sbBinNames                
+
+sigmasses = set()
+for nj in sigres:
+  for lt in sigres[nj]:
+    for ht in sigres[nj][lt]:
+      for mglu in sigres[nj][lt][ht]["signals"]:
+        for mlsp in sigres[nj][lt][ht]["signals"][mglu]:
+          masses = ( mglu, mlsp )
+          if not masses in sigmasses:
+            sigmasses.add(masses)
+
+signals = [ ]
+for masses in sorted(sigmasses):
+  mglu, mlsp = masses
+  fmgluTeV = float(mglu)/1000.
+  fmlspTeV = float(mlsp)/1000.
+  label = 'T5q^{4}WW '
+  label += '{0:3.1f}/{1:3.1f}/{2:3.1f}'.format(fmgluTeV,(fmgluTeV+fmlspTeV)/2.,fmlspTeV)
+  signals.append({ 'color': ROOT.kBlack, 'name': 'S_'+str(mglu)+"_"+str(mlsp), \
+                     'mglu': mglu, 'mlsp': mlsp, 'label': label })
 
 for isig,signal in enumerate(signals):
   if args.signals!=None and not (isig in useSignalIndices):
