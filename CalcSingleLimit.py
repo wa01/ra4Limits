@@ -484,7 +484,8 @@ class CalcSingleLimit:
           opts = ""
           if self.runBlind:
               opts = "--run blind"
-          print 'Result ',mbBinNames[0]," , ",self.signal["name"],self.signal["mglu"],self.signal["mlsp"]," : ",self.c.calcLimit(options=opts)
+          res = self.c.calcLimit(options=opts,logfile=self.name+".out")
+          print 'Result ',mbBinNames[0]," , ",self.signal["name"],self.signal["mglu"],self.signal["mlsp"]," : ",res
           sys.stdout.close()
           sys.stdout = stdout
 

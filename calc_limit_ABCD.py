@@ -5,7 +5,7 @@ import os,sys
 import ROOT
 import pickle
 #import array
-from Workspace.RA4Analysis.signalRegions import *
+#from Workspace.RA4Analysis.signalRegions import *
 import argparse
 
 regionToDPhi = {

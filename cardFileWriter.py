@@ -178,7 +178,7 @@ class cardFileWriter:
     f.Close()
     return limit
 
-  def calcLimit(self, fname="", options=""):
+  def calcLimit(self, fname="", options="", logfile=None):
     import uuid, os 
     uniqueDirname="."
     unique=False
@@ -190,7 +190,10 @@ class cardFileWriter:
       self.writeToFile(uniqueDirname+"/"+fname)
     else:
       self.writeToFile(fname)
-    os.system("cd "+uniqueDirname+";combine --saveWorkspace -M Asymptotic "+options+" "+fname)
+    cmd = "cd "+uniqueDirname+";combine --saveWorkspace -M Asymptotic "+options+" "+fname
+    if logfile!=None:
+      cmd = "( " + cmd + ") > "+logfile+" 2>&1"
+    os.system(cmd)
     try:
       res= self.readResFile(uniqueDirname+"/higgsCombineTest.Asymptotic.mH120.root")
     except:
