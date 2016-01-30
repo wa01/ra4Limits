@@ -52,6 +52,7 @@ class CalcSingleLimit:
         self.name = "calc_single_limit"
         self.runLimit = False
         self.runBlind = False
+        self.force = False
         self.useBins = range(len(mbBinNames))
         self.corrSystSize = 100.0
         self.procNames = [ "W", "tt", "other", "QCD" ]
@@ -457,6 +458,13 @@ class CalcSingleLimit:
 
           
       txtname = self.name + ".txt"
+      logname = self.name + ".log"
+      outname = self.name + ".out"
+      if os.path.exists(txtname) or os.path.exists(logname) or os.path.exists(outname):
+          if not self.force:
+              print "Output file(s) exist for ",self.name," - skipping"
+              return
+          
       self.c.writeToFile(txtname)
       #
       # comments
@@ -480,7 +488,7 @@ class CalcSingleLimit:
 
       if self.runLimit:
           stdout = sys.stdout
-          sys.stdout = open(self.name+".log","a")
+          sys.stdout = open(self.name+".log","w")
           opts = ""
           if self.runBlind:
               opts = "--run blind"
