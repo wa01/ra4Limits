@@ -1,16 +1,26 @@
 import ROOT
+import sys
+import pickle
 from array import array
 
 filename = ""
 
 def toGraph2D(name,title,length,x,y,z):
-    result = ROOT.TGraph2D(name,title)
+    result = ROOT.TGraph2D(length)
+    result.SetName(name)
+    result.SetTitle(title)
+    print result
     for i in range(length):
         result.SetPoint(i,x[i],y[i],z[i])
+    h = result.GetHistogram()
+    h.SetMinimum(min(z))
+    h.SetMaximum(max(z))
     return result
 
 def toGraph(name,title,length,x,y):
-    result = ROOT.TGraph(name,title)
+    result = ROOT.TGraph(length)
+    result.SetName(name)
+    result.SetTitle(title)
     for i in range(length):
         result.SetPoint(i,x[i],y[i])
     return result
@@ -26,13 +36,13 @@ def SetupColors():
     arr_stops = array('d', stops)
     arr_red = array('d', red)
     arr_green = array('d', green)
-    arr_blues = array('d', blues)
+    arr_blue = array('d', blue)
     # num = 6
     # red[num] =   {1.,0.,0.,0.,1.,1.}
     # green[num] = {0.,0.,1.,1.,1.,0.}
     # blue[num] =  {1.,1.,1.,0.,0.,0.}
     # stops[num] = {0.,0.2,0.4,0.6,0.8,1.}*/
-    fi = ROOT.TColor::CreateGradientColorTable(num,arr_stops,arr_red,arr_green,arr_blue,bands)
+    fi = ROOT.TColor.CreateGradientColorTable(num,arr_stops,arr_red,arr_green,arr_blue,bands)
     for i in range(bands):
         colors.append(fi+i)
     arr_colors = array('i', colors)
@@ -40,10 +50,17 @@ def SetupColors():
     ROOT.gStyle.SetPalette(bands, arr_colors)
 
 
-def DrawContours (g2, color, style, leg, name):
+def DrawContours (g2, color, style, leg=None, name=None):
     
+    g2.Draw()
+    ROOT.gPad.Update()
+    raw_input("xxx")
     out = ROOT.TGraph()
+    h = g2.GetHistogram()
+    print h
     l = g2.GetContourList(1.)
+    print g2.GetName(),l
+    print g2.GetName(),l,l.GetSize()
     if not l:
         return out
     added = False
@@ -60,14 +77,13 @@ def DrawContours (g2, color, style, leg, name):
         g.SetLineStyle(style)
         g.SetLineWidth(5)
         g.Draw("L same")
-        if ( not added ) and leg and name != "":
-            leg.AddEntry(g, name.c_str(), "l")
-            added = true
+        if ( not added ) and ( leg != None ) and ( name != None ):
+            leg.AddEntry(g, name, "l")
+            added = True
     return out
 
-SetupColors()
+#SetupColors()
 
-assert filename!=""
 vmx = [ ]
 vmy = [ ]
 vxsec = [ ]
@@ -78,14 +94,18 @@ vexp = [ ]
 vup = [ ]
 vdown = [ ]
 
-
-start_read = False
-for line in open(infile):
-    if line.find("---")>=0:
-        start_read = True
-    elif start_read:
-        fields = line[:-1].split()
-        pmx,pmy,pxsec,pobs,pobsup,pobsdown,pexp,pup,pdown = [ float(x) for x in line[:-1].split() ]
+results = pickle.load(open(sys.argv[1],"rb"))
+for mg in results:
+    pmx = float(mg)
+    for ml in results[mg]:
+        pmy = float(ml)
+        pxsec = 1.
+        pobs = results[mg][ml]['-1.000']
+        pobsup = results[mg][ml]['-1.000']
+        pobsdown = results[mg][ml]['-1.000']
+        pexp = results[mg][ml]['0.500']
+        pup = results[mg][ml]['0.840']
+        pdown = results[mg][ml]['0.160']
         vmx.append(pmx)
         vmy.append(pmy)
         vxsec.append(pxsec)
@@ -96,7 +116,7 @@ for line in open(infile):
         vup.append(pup)
         vdown.append(pdown)
 
-assert len(vmx) > 2)
+assert len(vmx) > 2
 assert not ( len(vmx) != len(vmy) \
                  or len(vmx) != len(vxsec) \
                  or len(vmx) != len(vobs) \
@@ -118,27 +138,38 @@ gobsdown = toGraph2D("gobsdown", "Observed -1#sigma Limit", len(vobsdown), vmx, 
 gexp = toGraph2D("gexp", "Expected Limit", len(vexp), vmx, vmy, vexp)
 gup = toGraph2D("gup", "Expected +1#sigma Limit", len(vup), vmx, vmy, vup)
 gdown = toGraph2D("gdown", "Expected -1#sigma Limit", len(vdown), vmx, vmy, vdown)
-dots = toGraph(len(vmx), vmx, vmy)
+dots = toGraph("dots","dots",len(vmx), vmx, vmy)
 
 xmin = min(vmx)
 xmax = max(vmx)
 ymin = min(vmy)
 ymax = max(vmy)
 bin_size = 12.5
-int nxbins = max(1, min(500, int((xmax-xmin+bin_size/100.)/bin_size)))
-int nybins = max(1, min(500, int((ymax-ymin+bin_size/100.)/bin_size)))
+nxbins = max(1, min(500, int((xmax-xmin+bin_size/100.)/bin_size)))
+nybins = max(1, min(500, int((ymax-ymin+bin_size/100.)/bin_size)))
+gobs.SetNpx(nxbins)
+gobs.SetNpy(nybins)
 glim.SetNpx(nxbins)
 glim.SetNpy(nybins)
 
+hobs = gobs.GetHistogram()
 hlim = glim.GetHistogram()
 assert hlim
 hlim.SetTitle(";m_{gluino} [GeV];m_{LSP} [GeV]")
-  
-c = ROOT.TCanvas("","",800,800)
+
+c = ROOT.TCanvas("c","c",800,800)
 c.SetLogz()
+hobs.SetMinimum(min(vlim))
+hobs.SetMaximum(max(vlim))
 hlim.SetMinimum(min(vlim))
 hlim.SetMaximum(max(vlim))
+#hlim.Draw()
+#c.Update()
+#raw_input(" ")
 glim.Draw("colz")
+#gobs.Draw("colz")
+c.Update()
+raw_input("Enter")
 l = ROOT.TLegend(ROOT.gStyle.GetPadLeftMargin(), 1.-ROOT.gStyle.GetPadTopMargin(), \
                      1.-ROOT.gStyle.GetPadRightMargin(), 1.)
 l.SetNColumns(2)
@@ -149,9 +180,11 @@ cexp = DrawContours(gexp, 2, 1, l, "Expected")
 cobsup = DrawContours(gobsup, 1, 2)
 cobsdown = DrawContours(gobsdown, 1, 2)
 cobs = DrawContours(gobs, 1, 1, l, "Observed")
+#clim = DrawContours(glim, 1, 1, l, "Observed")
 l.Draw("same")
 dots.Draw("p same")
-c.Print("limit_scan.pdf")
+#c.Print("limit_scan.pdf")
+c.Print("limit_scan.png")
 
 tfile = ROOT.TFile("limit_scan.root","recreate")
 hlim.Write("hXsec_exp_corr")
