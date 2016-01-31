@@ -10,12 +10,14 @@ def toGraph2D(name,title,length,x,y,z):
     result = ROOT.TGraph2D(length)
     result.SetName(name)
     result.SetTitle(title)
-    print result
     for i in range(length):
         result.SetPoint(i,x[i],y[i],z[i])
     h = result.GetHistogram()
     h.SetMinimum(min(z))
     h.SetMaximum(max(z))
+    c = ROOT.TCanvas()
+    result.Draw()
+    del c
     return result
 
 def toGraph(name,title,length,x,y):
@@ -53,12 +55,10 @@ def SetupColors():
 
 def DrawContours (g2, color, style, leg=None, name=None):
     
-    g2.Draw()
-    ROOT.gPad.Update()
-    raw_input("xxx")
+#    g2.Draw()
+#    ROOT.gPad.Update()
     out = ROOT.TGraph()
     h = g2.GetHistogram()
-    print h
     l = g2.GetContourList(1.)
     print g2.GetName(),l
     print g2.GetName(),l,l.GetSize()
@@ -71,13 +71,17 @@ def DrawContours (g2, color, style, leg=None, name=None):
         if not g:
             continue
         n_points = g.GetN()
+        if name=="Observed":
+            print name,", graph ",i
+            for j in range(n_points):
+                print j,g.GetX()[j],g.GetY()[j]
         if n_points > max_points:
             out = g
             max_points = n_points
         g.SetLineColor(color)
         g.SetLineStyle(style)
         g.SetLineWidth(5)
-        g.Draw("L same")
+#        g.Draw("L same")
         if ( not added ) and ( leg != None ) and ( name != None ):
             leg.AddEntry(g, name, "l")
             added = True
@@ -148,40 +152,44 @@ ymax = max(vmy)
 bin_size = 12.5
 nxbins = max(1, min(500, int((xmax-xmin+bin_size/100.)/bin_size)))
 nybins = max(1, min(500, int((ymax-ymin+bin_size/100.)/bin_size)))
-gobs.SetNpx(nxbins)
-gobs.SetNpy(nybins)
 glim.SetNpx(nxbins)
 glim.SetNpy(nybins)
 
-hobs = gobs.GetHistogram()
+#hobs = gobs.GetHistogram()
 hlim = glim.GetHistogram()
 assert hlim
 hlim.SetTitle(";m_{gluino} [GeV];m_{LSP} [GeV]")
 
-c = ROOT.TCanvas("c","c",800,800)
-c.SetLogz()
-hobs.SetMinimum(min(vlim))
-hobs.SetMaximum(max(vlim))
-hlim.SetMinimum(min(vlim))
-hlim.SetMaximum(max(vlim))
-#hlim.Draw()
-#c.Update()
-#raw_input(" ")
-glim.Draw("colz")
-#gobs.Draw("colz")
-c.Update()
-raw_input("Enter")
 l = ROOT.TLegend(ROOT.gStyle.GetPadLeftMargin(), 1.-ROOT.gStyle.GetPadTopMargin(), \
                      1.-ROOT.gStyle.GetPadRightMargin(), 1.)
-l.SetNColumns(2)
-l.SetBorderSize(0)
 cup = DrawContours(gup, 2, 2)
 cdown = DrawContours(gdown, 2, 2)
 cexp = DrawContours(gexp, 2, 1, l, "Expected")
 cobsup = DrawContours(gobsup, 1, 2)
 cobsdown = DrawContours(gobsdown, 1, 2)
 cobs = DrawContours(gobs, 1, 1, l, "Observed")
-#clim = DrawContours(glim, 1, 1, l, "Observed")
+
+c = ROOT.TCanvas("c","c",800,800)
+c.SetLogz()
+#hobs.SetMinimum(min(vlim))
+#hobs.SetMaximum(max(vlim))
+hlim.SetMinimum(min(vlim))
+hlim.SetMaximum(max(vlim))
+#hlim.Draw()
+#c.Update()
+#raw_input(" ")
+#glim.Draw("colz")
+gobs.Draw("colz")
+cobs.Draw("L same")
+cobsup.Draw("L same")
+cobsdown.Draw("L same")
+cexp.Draw("L same")
+cup.Draw("L same")
+cdown.Draw("L same")
+c.Update()
+raw_input("Enter")
+l.SetNColumns(2)
+l.SetBorderSize(0)
 l.Draw("same")
 dots.Draw("p same")
 #c.Print("limit_scan.pdf")
