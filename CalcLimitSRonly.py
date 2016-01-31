@@ -130,6 +130,12 @@ class CalcSingleLimit:
       print "Using mb bins ",mbBinNames
       print "Using sb bins ",sbBinNames
       #
+      # scale signal cross section for low masses
+      #
+      xsecFactor = 1
+      if self.mglu<1000:
+          xsecFactor = 0.1
+      #
       # bin definition; observed and expected counts
       #
       for sbname in sbBinNames:
@@ -166,7 +172,7 @@ class CalcSingleLimit:
         #y_truth = mbres["W_truth"] +  mbres["TT_truth"] + mbres["Rest_truth"]
         self.c.specifyObservation(mbnameS,int(mbres["y_srNJet_0b_highDPhi"]+0.5))
         # expectation
-        self.specifyExpectation(mbnameS,"signal",self.sigSubDict(self.mbsigres)['yield_MB_SR'])
+        self.specifyExpectation(mbnameS,"signal",self.sigSubDict(self.mbsigres)['yield_MB_SR']*xsecFactor)
         self.specifyExpectation(mbnameS,"tt",mbres["TT_pred_final"])
         self.specifyExpectation(mbnameS,"W",mbres["W_pred_final"])
         self.specifyExpectation(mbnameS,"other",mbres["Rest_truth"])
@@ -355,6 +361,11 @@ class CalcSingleLimit:
       # comments
       #
       txt = open(txtname,"a")
+      if xsecFactor!=1:
+          txt.write("#\n")
+          txt.write("# ************************\n")
+          txt.write("# Signal rates have been scaled by "+str(xsecFactor)+" !!!!!!\n")
+          txt.write("#\n")
       txt.write("#\n")
       txt.write("# List of uncertainties\n")
       txt.write("#\n")
@@ -387,7 +398,11 @@ class CalcSingleLimit:
           opts = ""
           if self.runBlind:
               opts = "--run blind"
-          print 'Result ',mbBinNames[0]," , ",self.signal["name"],self.signal["mglu"],self.signal["mlsp"]," : ",self.c.calcLimit(options=opts)
+          res = self.c.calcLimit(options=opts)
+          if xsecFactor!=1:
+              for k in res:
+                  res[k] /= xsecFactor
+          print 'Result ',mbBinNames[0]," , ",self.signal["name"],self.signal["mglu"],self.signal["mlsp"]," : ",res
           sys.stdout.close()
           sys.stdout = stdout
-
+          return res
