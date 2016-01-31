@@ -70,13 +70,13 @@ print mlsps
 print dmls
 
 dmglu = 25.
-dmglu = 50.
+#dmglu = 50.
 mgluMin = mglus[0]
 mgluMax = mglus[-1]
 nmglu = int((mgluMax-mgluMin)/dmglu+1.5)
 
 dmlsp = 25.
-dmlsp = 50.
+#dmlsp = 50.
 mlspMin = 0.
 mlspMax = mlsps[-1]
 nmlsp = int((mlspMax-mlspMin)/dmlsp+1.5)
