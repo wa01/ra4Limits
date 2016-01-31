@@ -1,6 +1,7 @@
 import ROOT
 import sys
 import pickle
+from xsecSMS import gluino13TeV_NLONLL,gluino13TeV_NLONLL_Up,gluino13TeV_NLONLL_Down
 from array import array
 
 filename = ""
@@ -99,10 +100,10 @@ for mg in results:
     pmx = float(mg)
     for ml in results[mg]:
         pmy = float(ml)
-        pxsec = 1.
+        pxsec = gluino13TeV_NLONLL[mg]
         pobs = results[mg][ml]['-1.000']
-        pobsup = results[mg][ml]['-1.000']
-        pobsdown = results[mg][ml]['-1.000']
+        pobsup = pobs * pxsec/gluino13TeV_NLONLL_Up[mg]
+        pobsdown = pobs * pxsec/gluino13TeV_NLONLL_Down[mg]
         pexp = results[mg][ml]['0.500']
         pup = results[mg][ml]['0.840']
         pdown = results[mg][ml]['0.160']
