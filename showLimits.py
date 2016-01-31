@@ -31,11 +31,11 @@ def drawContours(cnv,h,lstyle,lwidth):
 
 results = pickle.load(file(sys.argv[1]))
 
-fnstyle = os.path.expandvars("$CMSSW_BASE/src/Workspace/HEPHYPythonTools/scripts/root/tdrstyle.C")
+fnstyle = os.path.expandvars("$WORK/susy/CMSSW_7_4_14/src/Workspace/HEPHYPythonTools/scripts/root/tdrstyle.C")
 ROOT.gROOT.ProcessLine(".L "+fnstyle)
 ROOT.setTDRStyle()
 
-fncolor = os.path.expandvars("$CMSSW_BASE/src/Workspace/HEPHYPythonTools/scripts/root/useNiceColorPalette.C")
+fncolor = os.path.expandvars("$WORK/susy/CMSSW_7_4_14/src/Workspace/HEPHYPythonTools/scripts/root/useNiceColorPalette.C")
 ROOT.gROOT.ProcessLine(".L "+fncolor)
 ROOT.useNiceColorPalette()
 

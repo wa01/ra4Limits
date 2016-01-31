@@ -53,6 +53,7 @@ class CalcSingleLimit:
         self.runLimit = False
         self.runBlind = False
         self.force = False
+        self.dir = "."
         self.useBins = range(len(mbBinNames))
         self.corrSystSize = 100.0
         self.procNames = [ "W", "tt", "other", "QCD" ]
@@ -341,11 +342,9 @@ class CalcSingleLimit:
               ttVar = sbres["y_crNJet_1b_lowDPhi"]
               self.specifyUncertainty(uncName,mbnameS,"tt",1.+sqrt(ttVar)/ttYield)
 
-
-          
-      txtname = self.name + ".txt"
-      logname = self.name + ".log"
-      outname = self.name + ".out"
+      txtname = os.path.join(self.dir,self.name+".txt")
+      logname = os.path.join(self.dir,self.name+".log")
+      outname = os.path.join(self.dir,self.name+".out")
       if os.path.exists(txtname) or os.path.exists(logname) or os.path.exists(outname):
           if not self.force:
               print "Output file(s) exist for ",self.name," - skipping"
@@ -384,7 +383,7 @@ class CalcSingleLimit:
 
       if self.runLimit:
           stdout = sys.stdout
-          sys.stdout = open(self.name+".log","w")
+          sys.stdout = open(logname,"w")
           opts = ""
           if self.runBlind:
               opts = "--run blind"

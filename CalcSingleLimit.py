@@ -53,6 +53,7 @@ class CalcSingleLimit:
         self.runLimit = False
         self.runBlind = False
         self.force = False
+        self.dir = "."
         self.useBins = range(len(mbBinNames))
         self.corrSystSize = 100.0
         self.procNames = [ "W", "tt", "other", "QCD" ]
@@ -457,9 +458,9 @@ class CalcSingleLimit:
                                           relErrForLimit(sbres["yQCD_srNJet_0b_lowDPhi"],vQCD))
 
           
-      txtname = self.name + ".txt"
-      logname = self.name + ".log"
-      outname = self.name + ".out"
+      txtname = os.path.join(self.dir,self.name+".txt")
+      logname = os.path.join(self.dir,self.name+".log")
+      outname = os.path.join(self.dir,self.name+".out")
       if os.path.exists(txtname) or os.path.exists(logname) or os.path.exists(outname):
           if not self.force:
               print "Output file(s) exist for ",self.name," - skipping"
@@ -488,11 +489,11 @@ class CalcSingleLimit:
 
       if self.runLimit:
           stdout = sys.stdout
-          sys.stdout = open(self.name+".log","w")
+          sys.stdout = open(logname,"w")
           opts = ""
           if self.runBlind:
               opts = "--run blind"
-          res = self.c.calcLimit(options=opts,logfile=self.name+".out")
+          res = self.c.calcLimit(options=opts,logfile=outname)
           print 'Result ',mbBinNames[0]," , ",self.signal["name"],self.signal["mglu"],self.signal["mlsp"]," : ",res
           sys.stdout.close()
           sys.stdout = stdout

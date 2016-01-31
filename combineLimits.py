@@ -1,7 +1,19 @@
+#
+# Loop over all limit_*_*.log files in a directory and produce a summary.
+# The summary is indexed by m_gluino, m_lsp, and the quantile (as in the combine output).
+# Arguments:
+#   - directory with the input files
+#   - name of the output pickle file (optional; default = <directory name>.pkl
+#
 import os,sys
 from fnmatch import fnmatch
 import pickle
 
+#
+# Read results from the log file:
+#   compare mass info with file name
+#   read dictionary string with results
+#
 def parseLogFile(fn,smglu,smlsp):
     for i,l in enumerate(open(fn)):
         if i>1:
@@ -21,15 +33,23 @@ def parseLogFile(fn,smglu,smlsp):
             print "*** log file parsing failed for ",fn
             return None
     return [ int(fields[4]), int(fields[5]), lims ]
-
-assert len(sys.argv)==3
-
+#
+# require at least one argument
+#
+assert len(sys.argv)>=2
+# directory
 indir = sys.argv[1]
 assert os.path.isdir(indir)
-
-out = sys.argv[2]
-assert not os.path.exists(out)
-
+# output file (do not overwrite)
+if len(sys.argv)>2:
+    out = sys.argv[2]
+else:
+    out = os.path.basename(os.path.normpath(indir))
+    assert len(out)>0
+    out += ".pkl"
+#
+# loop over files and keep count of successful reads
+#
 results = { }
 nsucc = 0
 nfail = 0
@@ -51,8 +71,9 @@ for f in os.listdir(indir):
     nsucc += 1
 
 print "Successfully parsed",nsucc,"files (",nfail,"files failed)"
-
-out = sys.argv[2]
+#
+# write summary to pickle file
+#
 assert not os.path.exists(out)
 fout = open(out,"wb")
 pickle.dump(results,fout)

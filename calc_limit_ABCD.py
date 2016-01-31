@@ -141,6 +141,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--nolimit', help='do not run limit', action='store_true')
 parser.add_argument('--blind', help='use blind mode', action='store_true')
 parser.add_argument('-f', '--force', dest='force', help='replace output files', action='store_true')
+parser.add_argument('-d', '--dir', dest='dir', help='output directory', default=None)
 parser.add_argument('--SRonly', help='use only SRs', action='store_true')
 parser.add_argument('--bins', help='list of bin indices to be used', 
                     dest='bins', default=None)
@@ -330,6 +331,12 @@ for isig,signal in enumerate(signals):
   calc.runLimit = not args.nolimit
   calc.runBlind = args.blind
   calc.force = args.force
+  if args.dir==None:
+    calc.dir = "."
+  else:
+    if not os.path.isdir(args.dir):
+      os.mkdir(args.dir)
+    calc.dir = args.dir
   if args.bins!=None:
     calc.useBins = sorted(useBinIndices)
   calc.limitSinglePoint()
