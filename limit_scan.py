@@ -71,10 +71,10 @@ def DrawContours (g2, color, style, leg=None, name=None):
         if not g:
             continue
         n_points = g.GetN()
-        if name=="Observed":
-            print name,", graph ",i
-            for j in range(n_points):
-                print j,g.GetX()[j],g.GetY()[j]
+        #if name=="Observed":
+        #    print name,", graph ",i
+        #    for j in range(n_points):
+        #        print j,g.GetX()[j],g.GetY()[j]
         if n_points > max_points:
             out = g
             max_points = n_points
@@ -104,6 +104,7 @@ for mg in results:
     pmx = float(mg)
     for ml in results[mg]:
         pmy = float(ml)
+
         pxsec = gluino13TeV_NLONLL[mg]
         pobs = results[mg][ml]['-1.000']
         pobsup = pobs * pxsec/gluino13TeV_NLONLL_Up[mg]
@@ -111,6 +112,16 @@ for mg in results:
         pexp = results[mg][ml]['0.500']
         pup = results[mg][ml]['0.840']
         pdown = results[mg][ml]['0.160']
+        ## **** temporary !!! ***
+        #if mg<=900 and ml<=400:
+        #    print "*** removing point"
+        #    pxsec = 1.
+        #    pobs = 0.000001
+        #    pobsup = 0.000001
+        #    pobsdown = 0.000001
+        #    pexp = 0.000001
+        #    pup = 0.000001
+        #    pdown = 0.000001
         vmx.append(pmx)
         vmy.append(pmy)
         vxsec.append(pxsec)
@@ -175,11 +186,13 @@ c.SetLogz()
 #hobs.SetMaximum(max(vlim))
 hlim.SetMinimum(min(vlim))
 hlim.SetMaximum(max(vlim))
+# *** temporary
+hlim.SetMaximum(1000*min(vlim))
 #hlim.Draw()
 #c.Update()
 #raw_input(" ")
-#glim.Draw("colz")
-gobs.Draw("colz")
+glim.Draw("colz")
+#gobs.Draw("colz")
 cobs.Draw("L same")
 cobsup.Draw("L same")
 cobsdown.Draw("L same")
