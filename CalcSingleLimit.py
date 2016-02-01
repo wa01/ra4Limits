@@ -213,7 +213,7 @@ class CalcSingleLimit:
       # self.c.addUncertainty("worst","lnN")
       self.c.addUncertainty("btag","lnN")
       self.c.addUncertainty("lumi","lnN")
-      self.c.addUncertainty("sigSyst","lnN")
+#      self.c.addUncertainty("sigSyst","lnN")
       self.c.addUncertainty("xsecOther","lnN")
       for bname in sbBinNames:
         sbname = bname + "S"
@@ -227,7 +227,7 @@ class CalcSingleLimit:
           self.c.specifyUncertainty("lumi",mbname,"signal",1.046)
 #          self.c.specifyUncertainty("sigSyst",mbname,"signal",1.20) # to be corrected!
           self.c.specifyUncertainty("lumi",mbname,"other",1.046)
-          self.c.specifyUncertainty("xsecOther",sbname,"other",1.50)
+          self.c.specifyUncertainty("xsecOther",mbname,"other",1.50)
       #
       # correlations between MB/SR and MB/CR or SB/SR
       #
