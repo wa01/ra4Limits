@@ -67,6 +67,11 @@ for f in os.listdir(indir):
     if not mglu in results:
         results[mglu] = { }
     assert not ( mlsp in results[mglu])
+    ## *** temporary
+    #if mglu<1000:
+    #    for l in lims:
+    #        lims[l] /= 100.
+    ## *** temporary
     results[mglu][mlsp] = lims
     nsucc += 1
 

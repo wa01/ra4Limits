@@ -401,7 +401,7 @@ class CalcSingleLimit:
           res = self.c.calcLimit(options=opts)
           if xsecFactor!=1:
               for k in res:
-                  res[k] /= xsecFactor
+                  res[k] *= xsecFactor
           print 'Result ',mbBinNames[0]," , ",self.signal["name"],self.signal["mglu"],self.signal["mlsp"]," : ",res
           sys.stdout.close()
           sys.stdout = stdout
