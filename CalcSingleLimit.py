@@ -108,7 +108,7 @@ class CalcSingleLimit:
         sbnameS = sbname + "S"
         self.c.addBin(sbnameS,self.procNames,sbnameS)
         sbres = self.subDict(self.bkgres,self.sbBins[sbname])
-        self.sbsigres = self.subDict(self.sigres,self.sbBins[sbname])
+        sbsigres = self.subDict(self.sigres,self.sbBins[sbname])[self.mglu][self.mlsp]
 
         #
         # debug
@@ -149,7 +149,7 @@ class CalcSingleLimit:
           #    sbres["yTT_crNJet_0b_"+rDPhi+"_truth"] + \
           #    sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
           self.c.specifyObservation(sbnameS,int(sbres["y_crNJet_0b_highDPhi"]+0.5))
-          self.c.specifyExpectation(sbnameS,"signal",self.sigSubDict(self.sbsigres)['yield_SB_W_SR']*xsecFactor)
+          self.c.specifyExpectation(sbnameS,"signal",sbsigres['yield_SB_W_SR']*xsecFactor)
           self.c.specifyExpectation(sbnameS,"W",sbres["yW_crNJet_0b_"+rDPhi])
           self.c.specifyExpectation(sbnameS,"tt",sbres["yTT_crNJet_0b_"+rDPhi])
           self.c.specifyExpectation(sbnameS,"other",sbres["yRest_crNJet_0b_"+rDPhi+"_truth"])
@@ -163,7 +163,7 @@ class CalcSingleLimit:
           #    sbres["yTT_crNJet_1b_"+rDPhi+"_truth"] + \
           #    sbres["yRest_crNJet_1b_"+rDPhi+"_truth"]
           self.c.specifyObservation(sbnameS,int(sbres["y_crNJet_1b_highDPhi"]+0.5))
-          self.c.specifyExpectation(sbnameS,"signal",self.sigSubDict(self.sbsigres)['yield_SB_tt_SR']*xsecFactor)
+          self.c.specifyExpectation(sbnameS,"signal",sbsigres['yield_SB_tt_SR']*xsecFactor)
           self.c.specifyExpectation(sbnameS,"W",0.001)
           self.c.specifyExpectation(sbnameS,"tt",sbres["y_crNJet_1b_"+rDPhi])
           self.c.specifyExpectation(sbnameS,"other",0.001) 
@@ -172,7 +172,7 @@ class CalcSingleLimit:
 
       for mbname in mbBinNames:
         mbres = self.subDict(self.bkgres,self.mbBins[mbname])
-        self.mbsigres = self.subDict(self.sigres,self.mbBins[mbname])
+        mbsigres = self.subDict(self.sigres,self.mbBins[mbname])[self.mglu][self.mlsp]
         #
         # low dPhi (CR)
         #
@@ -186,7 +186,7 @@ class CalcSingleLimit:
         #    mbres["yQCD_srNJet_0b_"+rDPhi+"_truth"]
         self.c.specifyObservation(mbnameC,int(mbres["y_srNJet_0b_lowDPhi"]+0.5))
         # expectation
-        self.c.specifyExpectation(mbnameC,"signal",self.sigSubDict(self.mbsigres)['yield_MB_CR']*xsecFactor)
+        self.c.specifyExpectation(mbnameC,"signal",mbsigres['yield_MB_CR']*xsecFactor)
         self.c.specifyExpectation(mbnameC,"tt",mbres["yTT_srNJet_0b_"+rDPhi])
         self.c.specifyExpectation(mbnameC,"W",mbres["yW_srNJet_0b_"+rDPhi])
         self.c.specifyExpectation(mbnameC,"other",mbres["yRest_srNJet_0b_"+rDPhi+"_truth"])
@@ -201,7 +201,7 @@ class CalcSingleLimit:
         #y_truth = mbres["W_truth"] +  mbres["TT_truth"] + mbres["Rest_truth"]
         self.c.specifyObservation(mbnameS,int(mbres["y_srNJet_0b_highDPhi"]+0.5))
         # expectation
-        self.c.specifyExpectation(mbnameS,"signal",self.sigSubDict(self.mbsigres)['yield_MB_SR']*xsecFactor)
+        self.c.specifyExpectation(mbnameS,"signal",mbsigres['yield_MB_SR']*xsecFactor)
         self.c.specifyExpectation(mbnameS,"tt",mbres["TT_pred_final"])
         self.c.specifyExpectation(mbnameS,"W",mbres["W_pred_final"])
         self.c.specifyExpectation(mbnameS,"other",mbres["Rest_truth"])
@@ -218,14 +218,14 @@ class CalcSingleLimit:
       for bname in sbBinNames:
         sbname = bname + "S"
         self.c.specifyUncertainty("lumi",sbname,"signal",1.046)
-        self.c.specifyUncertainty("sigSyst",sbname,"signal",1.20) # to be corrected!
+#        self.c.specifyUncertainty("sigSyst",sbname,"signal",1.20) # to be corrected!
         self.c.specifyUncertainty("lumi",sbname,"other",1.046)
         self.c.specifyUncertainty("xsecOther",sbname,"other",1.50)
       for bname in mbBinNames:
         for r in [ "C", "S" ]:
           mbname = bname + r
           self.c.specifyUncertainty("lumi",mbname,"signal",1.046)
-          self.c.specifyUncertainty("sigSyst",mbname,"signal",1.20) # to be corrected!
+#          self.c.specifyUncertainty("sigSyst",mbname,"signal",1.20) # to be corrected!
           self.c.specifyUncertainty("lumi",mbname,"other",1.046)
           self.c.specifyUncertainty("xsecOther",sbname,"other",1.50)
       #
@@ -236,7 +236,7 @@ class CalcSingleLimit:
         mbnameC = mbname + "C"
         mbnameS = mbname + "S"
         mbres = self.subDict(self.bkgres,self.mbBins[mbname])
-        self.mbsigres = self.subDict(self.sigres,self.mbBins[mbname])
+        mbsigres = self.subDict(self.sigres,self.mbBins[mbname])[self.mglu][self.mlsp]
 
         sbWname = "J3" + bname
         sbWnameS = sbWname + "S"
@@ -275,7 +275,7 @@ class CalcSingleLimit:
         mbnameC = mbname + "C"
         mbnameS = mbname + "S"
         mbres = self.subDict(self.bkgres,self.mbBins[mbname])
-        self.mbsigres = self.subDict(self.sigres,self.mbBins[mbname])
+        mbsigres = self.subDict(self.sigres,self.mbBins[mbname])
 
         sbWname = "J3" + bname
         sbWnameS = sbWname + "S"
@@ -321,7 +321,7 @@ class CalcSingleLimit:
         mbnameC = mbname + "C"
         mbnameS = mbname + "S"
         mbres = self.subDict(self.bkgres,self.mbBins[mbname])
-        self.mbsigres = self.subDict(self.sigres,self.mbBins[mbname])
+        mbsigres = self.subDict(self.sigres,self.mbBins[mbname])[self.mglu][self.mlsp]
 
         sbWname = "J3" + bname
         # sbWnameC = sbWnameBase + "C"
@@ -341,6 +341,7 @@ class CalcSingleLimit:
         # uncertainty on b tagging
         if not "btag" in self.c.uncertainties:
             self.c.addUncertainty("btag","lnN")
+        self.c.specifyUncertainty("btag",mbnameS,"signal",1.+sqrt(mbsigres["var_b_MB_SR"]**2+mbsigres["var_light_MB_SR"]**2))
         self.c.specifyUncertainty("btag",mbnameS,"W",1.+mbres["systematics"]["btagSF"])
         self.c.specifyUncertainty("btag",mbnameS,"tt",1.+mbres["systematics"]["btagSF"])
         self.c.specifyUncertainty("btag",mbnameS,"other",1.+mbres["systematics"]["btagSF"])
@@ -353,7 +354,7 @@ class CalcSingleLimit:
         # uncertainty on lepton SFs
         if not "leptonSF" in self.c.uncertainties:
             self.c.addUncertainty("leptonSF","lnN")
-        self.c.specifyUncertainty("leptonSF",mbnameS,"signal",1.+mbres["systematics"]["lepSF"])
+        self.c.specifyUncertainty("leptonSF",mbnameS,"signal",1.+mbsigres["var_lepton_MB_SR"])
         self.c.specifyUncertainty("leptonSF",mbnameS,"W",1.+mbres["systematics"]["lepSF"])
         self.c.specifyUncertainty("leptonSF",mbnameS,"tt",1.+mbres["systematics"]["lepSF"])
         self.c.specifyUncertainty("leptonSF",mbnameS,"other",1.+mbres["systematics"]["lepSF"])
@@ -404,7 +405,18 @@ class CalcSingleLimit:
         # stat. uncertainty on signal efficiency
         uncName = "statSeff" + mbnameS
         self.c.addUncertainty(uncName,"lnN")
-        self.c.specifyUncertainty(uncName,mbnameS,"signal",1+self.sigSubDict(self.mbsigres)["err_MB_SR"])
+        self.c.specifyUncertainty(uncName,mbnameS,"signal", \
+                                      1+mbsigres["err_MB_SR"]/mbsigres["yield_MB_SR"])
+        # ISR uncertainty on signal efficiency
+        uncName = "isr" + mbnameS
+        self.c.addUncertainty(uncName,"lnN")
+        self.c.specifyUncertainty(uncName,mbnameS,"signal", \
+                                      1+mbsigres["delta_ISR"])
+        # JEC uncertainty on signal efficiency
+        uncName = "jec" + mbnameS
+        self.c.addUncertainty(uncName,"lnN")
+        self.c.specifyUncertainty(uncName,mbnameS,"signal", \
+                                      1+mbsigres["delta_jec"])
       #      # WORST CASE SYST
       #      uncName = "worst"+mbnameS
       #      self.c.addUncertainty(uncName,"lnN")
