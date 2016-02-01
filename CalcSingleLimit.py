@@ -405,8 +405,11 @@ class CalcSingleLimit:
         # stat. uncertainty on signal efficiency
         uncName = "statSeff" + mbnameS
         self.c.addUncertainty(uncName,"lnN")
-        self.c.specifyUncertainty(uncName,mbnameS,"signal", \
-                                      1+mbsigres["err_MB_SR"]/mbsigres["yield_MB_SR"])
+        if mbsigres["yield_MB_SR"]>0.001:
+            self.c.specifyUncertainty(uncName,mbnameS,"signal", \
+                                          1+mbsigres["err_MB_SR"]/mbsigres["yield_MB_SR"])
+        else:
+            self.c.specifyUncertainty(uncName,mbnameS,"signal",1.20)
         # ISR uncertainty on signal efficiency
         uncName = "isr" + mbnameS
         self.c.addUncertainty(uncName,"lnN")
