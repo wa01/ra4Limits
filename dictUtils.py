@@ -61,7 +61,8 @@ def dictDump (filename):
             for key in keys:
                 dicts.append( ( dicts[0][0][key], keyList + [ key ] ) )
         else:
-            print dicts[0][1]," : ",dicts[0][0]
+            if type(dicts[0][0]) in ( int, float, str ):
+                print dicts[0][1]," : ",dicts[0][0]
         dicts.pop(0)
 
 def dictDumpValue (filename,keys):
