@@ -15,6 +15,7 @@ import pickle
 #   read dictionary string with results
 #
 def parseLogFile(fn,smglu,smlsp):
+    fields = None
     for i,l in enumerate(open(fn)):
         if i>1:
             print "*** log file parsing failed for ",fn
@@ -32,6 +33,8 @@ def parseLogFile(fn,smglu,smlsp):
         if not ( fields[4]==smglu and fields[5]==smlsp ):
             print "*** log file parsing failed for ",fn
             return None
+    if fields==None:
+        print "No results for ",fn
     return [ int(fields[4]), int(fields[5]), lims ]
 #
 # require at least one argument
