@@ -35,6 +35,7 @@ def parseLogFile(fn,smglu,smlsp):
             return None
     if fields==None:
         print "No results for ",fn
+        return None
     return [ int(fields[4]), int(fields[5]), lims ]
 #
 # require at least one argument

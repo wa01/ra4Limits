@@ -207,8 +207,10 @@ lumi_origin = 3
 #sigres = pickle.load(file(os.path.expandvars("pickles150121/allSignals_2p3_pkl")))
 #bkgres = pickle.load(file(os.path.expandvars("pickles150121/resultsFinal_withSystematics_pkl")))
 #sigres = pickle.load(file(os.path.expandvars("pickles150125/allSignals_2p3_v2_pkl")))
-sigres = pickle.load(file(os.path.expandvars("pickles160130/allSignals_2p25_syst_pkl")))
-bkgres = pickle.load(file(os.path.expandvars("pickles150125/resultsFinal_withSystematics_pkl")))
+#sigres = pickle.load(file(os.path.expandvars("pickles160130/allSignals_2p25_syst_pkl")))
+#bkgres = pickle.load(file(os.path.expandvars("pickles150125/resultsFinal_withSystematics_pkl")))
+sigres = pickle.load(file(os.path.expandvars("pickles160218/allSignals_2p25_allSyst_approval_pkl")))
+bkgres = pickle.load(file(os.path.expandvars("pickles160218/resultsFinal_withSystematics_pkl")))
 
 #pdg = 'pos'
 #pdg = 'neg'
@@ -307,8 +309,8 @@ sigmasses = set()
 for nj in sigres:
   for lt in sigres[nj]:
     for ht in sigres[nj][lt]:
-      for mglu in sigres[nj][lt][ht]:
-        for mlsp in sigres[nj][lt][ht][mglu]:
+      for mglu in sigres[nj][lt][ht]["signals"]:
+        for mlsp in sigres[nj][lt][ht]["signals"][mglu]:
           masses = ( mglu, mlsp )
           if not masses in sigmasses:
             sigmasses.add(masses)

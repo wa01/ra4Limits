@@ -108,7 +108,7 @@ class CalcSingleLimit:
         sbnameS = sbname + "S"
         self.c.addBin(sbnameS,self.procNames,sbnameS)
         sbres = self.subDict(self.bkgres,self.sbBins[sbname])
-        sbsigres = self.subDict(self.sigres,self.sbBins[sbname])[self.mglu][self.mlsp]
+        sbsigres = self.subDict(self.sigres,self.sbBins[sbname])["signals"][self.mglu][self.mlsp]
 
         #
         # debug
@@ -172,7 +172,7 @@ class CalcSingleLimit:
 
       for mbname in mbBinNames:
         mbres = self.subDict(self.bkgres,self.mbBins[mbname])
-        mbsigres = self.subDict(self.sigres,self.mbBins[mbname])[self.mglu][self.mlsp]
+        mbsigres = self.subDict(self.sigres,self.mbBins[mbname])["signals"][self.mglu][self.mlsp]
         #
         # low dPhi (CR)
         #
@@ -213,20 +213,27 @@ class CalcSingleLimit:
       # self.c.addUncertainty("worst","lnN")
       self.c.addUncertainty("btag","lnN")
       self.c.addUncertainty("lumi","lnN")
-#      self.c.addUncertainty("sigSyst","lnN")
+      self.c.addUncertainty("trigger","lnN")
       self.c.addUncertainty("xsecOther","lnN")
+      self.c.addUncertainty("scales","lnN")
       for bname in sbBinNames:
         sbname = bname + "S"
+        sbsigres = self.subDict(self.sigres,self.sbBins[bname])["signals"][self.mglu][self.mlsp]
         self.c.specifyUncertainty("lumi",sbname,"signal",1.046)
 #        self.c.specifyUncertainty("sigSyst",sbname,"signal",1.20) # to be corrected!
         self.c.specifyUncertainty("lumi",sbname,"other",1.046)
+        self.c.specifyUncertainty("trigger",sbname,"signal",1.+sbsigres["syst_trigger"])
+        self.c.specifyUncertainty("scales",sbname,"signal",1.+sbsigres["syst_Q2"])
         self.c.specifyUncertainty("xsecOther",sbname,"other",1.50)
       for bname in mbBinNames:
         for r in [ "C", "S" ]:
           mbname = bname + r
+          mbsigres = self.subDict(self.sigres,self.mbBins[bname])["signals"][self.mglu][self.mlsp]
           self.c.specifyUncertainty("lumi",mbname,"signal",1.046)
 #          self.c.specifyUncertainty("sigSyst",mbname,"signal",1.20) # to be corrected!
           self.c.specifyUncertainty("lumi",mbname,"other",1.046)
+          self.c.specifyUncertainty("trigger",mbname,"signal",1.+mbsigres["syst_trigger"])
+          self.c.specifyUncertainty("scales",mbname,"signal",1.+mbsigres["syst_Q2"])
           self.c.specifyUncertainty("xsecOther",mbname,"other",1.50)
       #
       # correlations between MB/SR and MB/CR or SB/SR
@@ -236,7 +243,7 @@ class CalcSingleLimit:
         mbnameC = mbname + "C"
         mbnameS = mbname + "S"
         mbres = self.subDict(self.bkgres,self.mbBins[mbname])
-        mbsigres = self.subDict(self.sigres,self.mbBins[mbname])[self.mglu][self.mlsp]
+        mbsigres = self.subDict(self.sigres,self.mbBins[mbname])["signals"][self.mglu][self.mlsp]
 
         sbWname = "J3" + bname
         sbWnameS = sbWname + "S"
@@ -275,7 +282,7 @@ class CalcSingleLimit:
         mbnameC = mbname + "C"
         mbnameS = mbname + "S"
         mbres = self.subDict(self.bkgres,self.mbBins[mbname])
-        mbsigres = self.subDict(self.sigres,self.mbBins[mbname])
+        # mbsigres = self.subDict(self.sigres,self.mbBins[mbname])
 
         sbWname = "J3" + bname
         sbWnameS = sbWname + "S"
@@ -321,7 +328,7 @@ class CalcSingleLimit:
         mbnameC = mbname + "C"
         mbnameS = mbname + "S"
         mbres = self.subDict(self.bkgres,self.mbBins[mbname])
-        mbsigres = self.subDict(self.sigres,self.mbBins[mbname])[self.mglu][self.mlsp]
+        mbsigres = self.subDict(self.sigres,self.mbBins[mbname])["signals"][self.mglu][self.mlsp]
 
         sbWname = "J3" + bname
         # sbWnameC = sbWnameBase + "C"
@@ -341,7 +348,7 @@ class CalcSingleLimit:
         # uncertainty on b tagging
         if not "btag" in self.c.uncertainties:
             self.c.addUncertainty("btag","lnN")
-        self.c.specifyUncertainty("btag",mbnameS,"signal",1.+sqrt(mbsigres["var_b_MB_SR"]**2+mbsigres["var_light_MB_SR"]**2))
+        self.c.specifyUncertainty("btag",mbnameS,"signal",1.+sqrt(mbsigres["syst_B"]**2+mbsigres["syst_light"]**2))
         self.c.specifyUncertainty("btag",mbnameS,"W",1.+mbres["systematics"]["btagSF"])
         self.c.specifyUncertainty("btag",mbnameS,"tt",1.+mbres["systematics"]["btagSF"])
         self.c.specifyUncertainty("btag",mbnameS,"other",1.+mbres["systematics"]["btagSF"])
@@ -354,7 +361,7 @@ class CalcSingleLimit:
         # uncertainty on lepton SFs
         if not "leptonSF" in self.c.uncertainties:
             self.c.addUncertainty("leptonSF","lnN")
-        self.c.specifyUncertainty("leptonSF",mbnameS,"signal",1.+mbsigres["var_lepton_MB_SR"])
+        self.c.specifyUncertainty("leptonSF",mbnameS,"signal",1.+mbsigres["syst_lepton"])
         self.c.specifyUncertainty("leptonSF",mbnameS,"W",1.+mbres["systematics"]["lepSF"])
         self.c.specifyUncertainty("leptonSF",mbnameS,"tt",1.+mbres["systematics"]["lepSF"])
         self.c.specifyUncertainty("leptonSF",mbnameS,"other",1.+mbres["systematics"]["lepSF"])
@@ -383,6 +390,7 @@ class CalcSingleLimit:
         # PU systematics
         if not "PU" in self.c.uncertainties:
             self.c.addUncertainty("PU","lnN")
+        self.c.specifyUncertainty("PU",mbnameS,"signal",1.+mbsigres["syst_PU"])
         self.c.specifyUncertainty("PU",mbnameS,"W",1.+mbres["systematics"]["pileup"])
         self.c.specifyUncertainty("PU",mbnameS,"tt",1.+mbres["systematics"]["pileup"])
         self.c.specifyUncertainty("PU",mbnameS,"other",1.+mbres["systematics"]["pileup"])
@@ -407,19 +415,19 @@ class CalcSingleLimit:
         self.c.addUncertainty(uncName,"lnN")
         if mbsigres["yield_MB_SR"]>0.001:
             self.c.specifyUncertainty(uncName,mbnameS,"signal", \
-                                          1+mbsigres["err_MB_SR"]/mbsigres["yield_MB_SR"])
+                                          1+mbsigres["stat_err_MB_SR"]/mbsigres["yield_MB_SR"])
         else:
             self.c.specifyUncertainty(uncName,mbnameS,"signal",1.20)
         # ISR uncertainty on signal efficiency
         uncName = "isr" + mbnameS
         self.c.addUncertainty(uncName,"lnN")
         self.c.specifyUncertainty(uncName,mbnameS,"signal", \
-                                      1+mbsigres["delta_ISR"])
+                                      1+mbsigres["syst_ISR"])
         # JEC uncertainty on signal efficiency
         uncName = "jec" + mbnameS
         self.c.addUncertainty(uncName,"lnN")
         self.c.specifyUncertainty(uncName,mbnameS,"signal", \
-                                      1+mbsigres["delta_jec"])
+                                      1+mbsigres["syst_JEC"])
       #      # WORST CASE SYST
       #      uncName = "worst"+mbnameS
       #      self.c.addUncertainty(uncName,"lnN")

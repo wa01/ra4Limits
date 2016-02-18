@@ -206,16 +206,18 @@ l.SetBorderSize(0)
 l.Draw("same")
 dots.Draw("p same")
 #c.Print("limit_scan.pdf")
-c.Print("limit_scan.png")
+if len(sys.argv)>2:
+    c.Print(sys.argv[2]+".png")
 
-tfile = ROOT.TFile("limit_scan.root","recreate")
-hlim.Write("hXsec_exp_corr")
-cobs.Write("graph_smoothed_Obs")
-cobsup.Write("graph_smoothed_ObsP")
-cobsdown.Write("graph_smoothed_ObsM")
-cexp.Write("graph_smoothed_Exp")
-cup.Write("graph_smoothed_ExpP")
-cdown.Write("graph_smoothed_ExpM")
-tfile.Close()
+if len(sys.argv)>2:
+    tfile = ROOT.TFile(sys.argv[2]+".root","recreate")
+    hlim.Write("hXsec_exp_corr")
+    cobs.Write("graph_smoothed_Obs")
+    cobsup.Write("graph_smoothed_ObsP")
+    cobsdown.Write("graph_smoothed_ObsM")
+    cexp.Write("graph_smoothed_Exp")
+    cup.Write("graph_smoothed_ExpP")
+    cdown.Write("graph_smoothed_ExpM")
+    tfile.Close()
 
   
