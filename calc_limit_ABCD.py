@@ -147,6 +147,8 @@ parser.add_argument('--bins', help='list of bin indices to be used',
                     dest='bins', default=None)
 parser.add_argument('--signals', help='list of signal indices to be used', 
                     dest='signals', default=None)
+parser.add_argument('--masses', help='gluino,lsp masses of a signal point', 
+                    dest='masses', default=None)
 args = parser.parse_args()
 useBinIndices = set()
 if args.bins!=None:
@@ -158,6 +160,7 @@ if args.bins!=None:
         useBinIndices.add(i)
     else:
         useBinIndices.add(int(f))
+assert not ( args.signals!=None and args.masses!=None )
 useSignalIndices = set()
 if args.signals!=None:
   for f in args.signals.split(","):
@@ -168,6 +171,11 @@ if args.signals!=None:
         useSignalIndices.add(i)
     else:
         useSignalIndices.add(int(f))
+useSignalMasses = None
+if args.masses!=None:
+  ms = [ int(x) for x in args.masses.split(",") ]
+  assert len(ms)==2
+  useSignalMasses = ( ms[0], ms[1] )
 
 if args.SRonly:
   from CalcLimitSRonly import *
@@ -327,6 +335,8 @@ for masses in sorted(sigmasses):
 
 for isig,signal in enumerate(signals):
   if args.signals!=None and not (isig in useSignalIndices):
+    continue
+  if useSignalMasses!=None and ( signal["mglu"]!=useSignalMasses[0] or signal["mlsp"]!=useSignalMasses[1] ):
     continue
   print signal
   calc = CalcSingleLimit(bkgres,sbBinNames,sbBins,mbBinNames,mbBins,sigres,signal)
