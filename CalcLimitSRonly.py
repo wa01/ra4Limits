@@ -211,7 +211,9 @@ class CalcSingleLimit:
               pName = "tt"
               ysb = sbres["y_crNJet_1b_highDPhi"] - sbres["yQCD_crNJet_1b_highDPhi"]
               eysb = sqrt(sbres["y_Var_crNJet_1b_highDPhi"])/ysb
+          xequ = 1./eysb**2
           nequ = int(1./eysb**2+0.5)
+          nequ = max(nequ,1)
           self.c.addUncertainty(uncName,"gmN",nequ)
 
           for mbname in mbBinNames:
@@ -219,8 +221,12 @@ class CalcSingleLimit:
                   continue
               mbnameS = mbname + "S"
               mbres = self.subDict(self.bkgres,self.mbBins[mbname])
-              self.specifyUncertainty(uncName,mbnameS,pName, \
-                                            self.c.expectation[(mbnameS,pName)]/nequ)
+              try:
+                  self.specifyUncertainty(uncName,mbnameS,pName, \
+                                              self.c.expectation[(mbnameS,pName)]/xequ)
+              except:
+                  print uncName,mbnameS,pName,self.c.expectation[(mbnameS,pName)],nequ,eysb
+                  raise
 
       for mbname in mbBinNames:
           bname = mbname[2:]
@@ -325,7 +331,7 @@ class CalcSingleLimit:
         # stat. uncertainty on signal efficiency
         uncName = "statSeff" + mbnameS
         self.c.addUncertainty(uncName,"lnN")
-        self.specifyUncertainty(uncName,mbnameS,"signal",1+self.sigSubDict(self.mbsigres)["err_MB_SR"])
+        self.specifyUncertainty(uncName,mbnameS,"signal",1+self.sigSubDict(self.mbsigres)["stat_err_MB_SR"])
 
       #
       # SB related systematics propagated to MB
