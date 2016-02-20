@@ -3,6 +3,7 @@ import sys
 import pickle
 from xsecSMS import gluino13TeV_NLONLL,gluino13TeV_NLONLL_Up,gluino13TeV_NLONLL_Down
 from array import array
+from optparse import OptionParser
 
 filename = ""
 
@@ -87,6 +88,11 @@ def DrawContours (g2, color, style, leg=None, name=None):
             added = True
     return out
 
+
+parser = OptionParser()
+parser.add_option("-b", dest="batch", default=False, action="store_true")
+(options, args) = parser.parse_args()
+
 #SetupColors()
 
 vmx = [ ]
@@ -99,7 +105,7 @@ vexp = [ ]
 vup = [ ]
 vdown = [ ]
 
-results = pickle.load(open(sys.argv[1],"rb"))
+results = pickle.load(open(args[0],"rb"))
 for mg in results:
     pmx = float(mg)
     for ml in results[mg]:
@@ -200,17 +206,18 @@ cexp.Draw("L same")
 cup.Draw("L same")
 cdown.Draw("L same")
 c.Update()
-raw_input("Enter")
+if not options.batch:
+    raw_input("Enter")
 l.SetNColumns(2)
 l.SetBorderSize(0)
 l.Draw("same")
 dots.Draw("p same")
 #c.Print("limit_scan.pdf")
-if len(sys.argv)>2:
-    c.Print(sys.argv[2]+".png")
+if len(args)>1:
+    c.Print(args[1]+".png")
 
-if len(sys.argv)>2:
-    tfile = ROOT.TFile(sys.argv[2]+".root","recreate")
+if len(args)>1:
+    tfile = ROOT.TFile(args[1]+".root","recreate")
     hlim.Write("hXsec_exp_corr")
     cobs.Write("graph_smoothed_Obs")
     cobsup.Write("graph_smoothed_ObsP")
