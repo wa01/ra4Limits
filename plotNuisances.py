@@ -41,21 +41,21 @@ if fit_b == None or fit_b.ClassName()   != "RooFitResult": raise RuntimeError, "
 if prefit == None or prefit.ClassName() != "RooArgSet":    raise RuntimeError, "File %s does not contain the prefit nuisances 'nuisances_prefit'"  % args[0]
 
 results = {
-    "DiLep" : { },
+#    "DiLep" : { },
     "QCD" : { },
     "corrTTDF" : { },
     "corrTTEF" : { },
     "corrWBF" : { },
     "corrWEF" : { },
-    "jec" : { },
+#    "jec" : { },
     "kappaTT" : { },
     "kappaW" : { },
     "kappab" : { },
-    "rcs" : { },
+#    "rcs" : { },
     "rcsWemu" : { },
     "statSeff" : { },
     "yWtt" : { },
-    "isr" : { },
+#    "isr" : { },
     "stat" : { },
     "other" : { }
 }
@@ -92,6 +92,7 @@ for i in range(fpf_b.getSize()):
             results[cat][name]["nuis_val"] = nuis_x.getVal()
             results[cat][name]["nuis_err"] = nuis_x.getError()
 
+ROOT.gStyle.SetOptTitle(0)
 ROOT.gROOT.cd()
 canvases = [ ]
 gobjects = { }
@@ -141,7 +142,14 @@ for c in results:
     gobjects[c][0].Draw()
     gobjects[c][1].Draw("e0 z same")
     gobjects[c][2].Draw("e0 z same")
+    leg = ROOT.TLegend(0.68,0.78,0.88,0.88)
+    leg.SetFillColor(ROOT.kWhite)
+    leg.SetBorderSize(0)
+    leg.AddEntry(gobjects[c][1],"Prefit","l")
+    leg.AddEntry(gobjects[c][2],"Post bkg fit","l")
+    leg.Draw()
     canvases[-1].Update()
+    canvases[-1].SaveAs("nuisances-"+c+".pdf")
 
 raw_input("Enter")
 
