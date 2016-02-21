@@ -374,26 +374,20 @@ class CalcSingleLimit:
         self.c.addUncertainty("kappab"+mbnameS,"lnN")
         self.c.specifyUncertainty("kappab"+mbnameS,mbnameS,"tt",1.+mbres["systematics"]["kappa_b"])
         # Rcs systematics W and tt ("linear fit")
-        uncName = "rcsW"
-        if not uncName in self.c.uncertainties:
-            self.c.addUncertainty(uncName,"lnN")
-        self.c.specifyUncertainty(uncName,mbnameS,"W",1.+mbres["systematics"]["rcs_W"])
-        uncName = "rcsTT"
-        if not uncName in self.c.uncertainties:
-            self.c.addUncertainty(uncName,"lnN")
-        self.c.specifyUncertainty(uncName,mbnameS,"tt",1.+mbres["systematics"]["rcs_tt"])
+        self.c.addUncertainty("rcsW"+mbnameS,"lnN")
+        self.c.specifyUncertainty("rcsW"+mbnameS,mbnameS,"W",1.+mbres["systematics"]["rcs_W"])
+        self.c.addUncertainty("rcsTT"+mbnameS,"lnN")
+        self.c.specifyUncertainty("rcsTT"+mbnameS,mbnameS,"tt",1.+mbres["systematics"]["rcs_tt"])
         # QCD systematics
         self.c.addUncertainty("QCD"+mbnameS,"lnN")
         self.c.specifyUncertainty("QCD"+mbnameS,mbnameS,"W",1.+mbres["systematics"]["QCD"])
         self.c.specifyUncertainty("QCD"+mbnameS,mbnameS,"tt",1.+mbres["systematics"]["QCD"])
         self.c.specifyUncertainty("QCD"+mbnameS,mbnameS,"other",1.+mbres["systematics"]["QCD"])
         # dilepton
-        uncName = "diLep"
-        if not uncName in self.c.uncertainties:
-            self.c.addUncertainty(uncName,"lnN")
-        self.c.specifyUncertainty(uncName,mbnameS,"W",1.+mbres["systematics"]["dilep"])
-        self.c.specifyUncertainty(uncName,mbnameS,"tt",1.+mbres["systematics"]["dilep"])
-        self.c.specifyUncertainty(uncName,mbnameS,"other",1.+mbres["systematics"]["dilep"])
+        self.c.addUncertainty("DiLep"+mbnameS,"lnN")
+        self.c.specifyUncertainty("DiLep"+mbnameS,mbnameS,"W",1.+mbres["systematics"]["dilep"])
+        self.c.specifyUncertainty("DiLep"+mbnameS,mbnameS,"tt",1.+mbres["systematics"]["dilep"])
+        self.c.specifyUncertainty("DiLep"+mbnameS,mbnameS,"other",1.+mbres["systematics"]["dilep"])
         # PU systematics
         if not "PU" in self.c.uncertainties:
             self.c.addUncertainty("PU","lnN")
@@ -436,18 +430,21 @@ class CalcSingleLimit:
             self.c.addUncertainty("scale","lnN")
         self.c.specifyUncertainty("scale",mbnameS,"signal",1.+mbsigres["syst_Q2"])
         # ISR uncertainty on signal efficiency
-        uncName = "isr"
-        if not uncName in self.c.uncertainties:
-            self.c.addUncertainty(uncName,"lnN")
-        self.c.specifyUncertainty(uncName,mbnameS,"signal",1+mbsigres["syst_ISR"])
+        uncName = "isr" + mbnameS
+        self.c.addUncertainty(uncName,"lnN")
+        self.c.specifyUncertainty(uncName,mbnameS,"signal", \
+                                      1+mbsigres["syst_ISR"])
         # JEC uncertainty on signal efficiency
-        uncName = "jec"
-        if not uncName in self.c.uncertainties:
-            self.c.addUncertainty(uncName,"lnN")
-        self.c.specifyUncertainty(uncName,mbnameS,"signal",1+mbsigres["syst_JEC"])
-        self.c.specifyUncertainty(uncName,mbnameS,"W",1+mbres["systematics"]["JEC"])
-        self.c.specifyUncertainty(uncName,mbnameS,"tt",1+mbres["systematics"]["JEC"])
-        self.c.specifyUncertainty(uncName,mbnameS,"other",1+mbres["systematics"]["JEC"])
+        uncName = "jec" + mbnameS
+        self.c.addUncertainty(uncName,"lnN")
+        self.c.specifyUncertainty(uncName,mbnameS,"signal", \
+                                      1+mbsigres["syst_JEC"])
+        self.c.specifyUncertainty(uncName,mbnameS,"W", \
+                                      1+mbres["systematics"]["JEC"])
+        self.c.specifyUncertainty(uncName,mbnameS,"tt", \
+                                      1+mbres["systematics"]["JEC"])
+        self.c.specifyUncertainty(uncName,mbnameS,"other", \
+                                      1+mbres["systematics"]["JEC"])
       #      # WORST CASE SYST
       #      uncName = "worst"+mbnameS
       #      self.c.addUncertainty(uncName,"lnN")
