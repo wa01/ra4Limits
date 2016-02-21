@@ -55,7 +55,8 @@ class CalcSingleLimit:
         self.force = False
         self.dir = "."
         self.useBins = range(len(mbBinNames))
-        self.corrSystSize = 100.0
+        self.corrSystSize = 1000.0
+        self.corrSystPdf = "lnN"
         self.procNames = [ "W", "tt", "other", "QCD" ]
 
         self.bkgres = bkgres
@@ -257,22 +258,22 @@ class CalcSingleLimit:
         # correlation W regions: B and F / E and F
         #
         uncName = "corrWBF" + mbname
-        self.c.addUncertainty(uncName,"lnU")
+        self.c.addUncertainty(uncName,self.corrSystPdf)
         self.c.specifyUncertainty(uncName,"J3"+bname+"S","W",self.corrSystSize)
         self.c.specifyUncertainty(uncName,mbnameS,"W",self.corrSystSize)
         uncName = "corrWEF" + mbname
-        self.c.addUncertainty(uncName,"lnU")
+        self.c.addUncertainty(uncName,self.corrSystPdf)
         self.c.specifyUncertainty(uncName,mbnameC,"W",self.corrSystSize)
         self.c.specifyUncertainty(uncName,mbnameS,"W",self.corrSystSize)
         #
         # correlation tt regions: D and F / E and F
         #
         uncName = "corrTTDF" + mbname
-        self.c.addUncertainty(uncName,"lnU")
+        self.c.addUncertainty(uncName,self.corrSystPdf)
         self.c.specifyUncertainty(uncName,"J4"+bname+"S","tt",self.corrSystSize)
         self.c.specifyUncertainty(uncName,mbnameS,"tt",self.corrSystSize)
         uncName = "corrTTEF" + mbname
-        self.c.addUncertainty(uncName,"lnU")
+        self.c.addUncertainty(uncName,self.corrSystPdf)
         self.c.specifyUncertainty(uncName,mbnameC,"tt",self.corrSystSize)
         self.c.specifyUncertainty(uncName,mbnameS,"tt",self.corrSystSize)
       #
