@@ -15,9 +15,13 @@ class cardFileWriter:
     self.maxUncStrWidth = 30
     self.hasContamination=False
     self.groups = {}
+    self.extraLines = [ ]
 
   def reset(self):
     self.__init__()	
+
+  def addExtraLine(self,l):
+    self.extraLines.append(l)
 
   def addBin(self, name, processes, niceName=""):
     if len(name)>30:
@@ -174,6 +178,9 @@ class cardFileWriter:
     #    for gg in sorted(self.groups[g]):
     #      outfile.write(" "+gg)
     #    outfile.write('\n')
+
+    for l in self.extraLines:
+      outfile.write(l+"\n")
 
     outfile.close()
 

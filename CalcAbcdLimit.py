@@ -128,16 +128,19 @@ class CalcSingleLimit:
         #result += "{0:8.3f}".format(err)
         return result
 
-    def rateParamValueLine(self,name,p,val):
+    def rateParamValueLine(self,name,p,val,comment=False):
         result = self.rateParamName(name,p)
-        assert not result in self.allRateParams
-        self.allRateParams.append(result)
+        if not comment:
+            assert not result in self.allRateParams
+            self.allRateParams.append(result)
         result += " rateParam "
         result += name + " " + p + " "
         result += "{0:8.3f}".format(val) + " "
         result += "[0.," + "{0:8.3f}".format(3*val).strip() + "]"
         #result += "[" + "{0:8.3f}".format(0.5*val).strip() + ","
         #result += "{0:8.3f}".format(2*val).strip() + "]"
+        if comment:
+            result = "#" + result
         return result
 
     def limitSinglePoint(self):
@@ -277,8 +280,8 @@ class CalcSingleLimit:
         # self.c.specifyExpectation(mbnameS,"W",mbres["W_pred_final"])
         self.c.specifyExpectation(mbnameS,"tt",1.)
         self.c.specifyExpectation(mbnameS,"W",1.)
-        #self.rateParamLines.append(self.rateParamValueLine(mbnameS,"tt",mbres["TT_pred_final"]))
-        #self.rateParamLines.append(self.rateParamValueLine(mbnameS,"W",mbres["W_pred_final"]))
+        self.rateParamLines.append(self.rateParamValueLine(mbnameS,"tt",mbres["TT_pred_final"],comment=True))
+        self.rateParamLines.append(self.rateParamValueLine(mbnameS,"W",mbres["W_pred_final"],comment=True))
         assert not mbnameS in self.yieldstt
         self.yieldstt[mbnameS] = mbres["TT_pred_final"]
         assert not mbnameS in self.yieldsW
@@ -587,26 +590,26 @@ class CalcSingleLimit:
               print "Output file(s) exist for ",self.name," - skipping"
               return
           
-      self.c.writeToFile(txtname)
       #
       # comments
       #
-      txt = open(txtname,"a")
       if xsecFactor!=1:
-          txt.write("#\n")
-          txt.write("# ************************\n")
-          txt.write("# Signal rates have been scaled by "+str(xsecFactor)+" !!!!!!\n")
-          txt.write("#\n")
+          self.c.addExtraLine("#")
+          self.c.addExtraLine("# ************************")
+          self.c.addExtraLine("# Signal rates have been scaled by "+str(xsecFactor)+" !!!!!!")
+          self.c.addExtraLine("#")
 
-      txt.write("\n")
+      self.c.addExtraLine("")
       for l in sorted(self.rateParamLines):
-          txt.write(l+"\n")
+          self.c.addExtraLine(l+"")
 
-      txt.write("\n")
+      self.c.addExtraLine("")
       for l in sorted(self.paramLines):
           k = l.split()[0]
           l += "{0:8.3f}".format(sqrt(self.kappaVars[k]))
-          txt.write(l+"\n")
+          self.c.addExtraLine(l+"")
+
+      self.c.writeToFile(txtname)
 
 #      txt.write("#\n")
 #      txt.write("# List of uncertainties\n")
@@ -622,7 +625,6 @@ class CalcSingleLimit:
 #      txt.write("# yWttJ[34]LyHzDuC ?? anti-correlated W/tt fraction fit systematics in W SB lowDPhi\n")
 #      txt.write("# lumi .............. luminosity\n")
 #      txt.write("# sigSyst ........... approximated total signal systematics\n")
-      txt.close()
 
       if self.runLimit:
           stdout = sys.stdout
