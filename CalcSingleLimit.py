@@ -213,7 +213,7 @@ class CalcSingleLimit:
       #
       # self.c.addUncertainty("worst","lnN")
       self.c.addUncertainty("lumi","lnN")
-      self.c.addUncertainty("xsecOther","lnN")
+      self.c.addUncertainty("xsecOther","lnN",group="xsec")
       # self.c.addUncertainty("trigger","lnN")
       # self.c.addUncertainty("scales","lnN")
       for bname in sbBinNames:
@@ -258,22 +258,22 @@ class CalcSingleLimit:
         # correlation W regions: B and F / E and F
         #
         uncName = "corrWBF" + mbname
-        self.c.addUncertainty(uncName,self.corrSystPdf)
+        self.c.addUncertainty(uncName,self.corrSystPdf,group="corr")
         self.c.specifyUncertainty(uncName,"J3"+bname+"S","W",self.corrSystSize)
         self.c.specifyUncertainty(uncName,mbnameS,"W",self.corrSystSize)
         uncName = "corrWEF" + mbname
-        self.c.addUncertainty(uncName,self.corrSystPdf)
+        self.c.addUncertainty(uncName,self.corrSystPdf,group="corr")
         self.c.specifyUncertainty(uncName,mbnameC,"W",self.corrSystSize)
         self.c.specifyUncertainty(uncName,mbnameS,"W",self.corrSystSize)
         #
         # correlation tt regions: D and F / E and F
         #
         uncName = "corrTTDF" + mbname
-        self.c.addUncertainty(uncName,self.corrSystPdf)
+        self.c.addUncertainty(uncName,self.corrSystPdf,group="corr")
         self.c.specifyUncertainty(uncName,"J4"+bname+"S","tt",self.corrSystSize)
         self.c.specifyUncertainty(uncName,mbnameS,"tt",self.corrSystSize)
         uncName = "corrTTEF" + mbname
-        self.c.addUncertainty(uncName,self.corrSystPdf)
+        self.c.addUncertainty(uncName,self.corrSystPdf,group="corr")
         self.c.specifyUncertainty(uncName,mbnameC,"tt",self.corrSystSize)
         self.c.specifyUncertainty(uncName,mbnameS,"tt",self.corrSystSize)
       #
@@ -298,7 +298,7 @@ class CalcSingleLimit:
             ys = [ sbWres["yW_crNJet_0b_lowDPhi"], sbWres["yTT_crNJet_0b_lowDPhi"], sbWres["yRest_crNJet_0b_lowDPhi_truth"] ]
             vys = [ sbWres["yW_Var_crNJet_0b_lowDPhi"], sbWres["yTT_Var_crNJet_0b_lowDPhi"], sbWres["yRest_Var_crNJet_0b_lowDPhi_truth"] ]
             fracErrs = relErrorsOnFractions(ys,vys)
-            self.c.addUncertainty(uncName,"lnN")
+            self.c.addUncertainty(uncName,"lnN",group="yWtt")
             self.c.specifyUncertainty(uncName,sbWnameS,"W",1.+fracErrs[0])
             self.c.specifyUncertainty(uncName,sbWnameS,"tt",1.-fracErrs[1])
         # !*! need to change from error on yield to error on fraction since total normalization fluctuation
@@ -316,7 +316,7 @@ class CalcSingleLimit:
                    mbres["yRest_Var_srNJet_0b_lowDPhi_truth"],  vQCD ]
         fracErrs = relErrorsOnFractions(ys,vys)
         uncName = "yWtt" + mbnameC
-        self.c.addUncertainty(uncName,"lnN")
+        self.c.addUncertainty(uncName,"lnN",group="yWtt")
         self.c.specifyUncertainty(uncName,mbnameC,"W",1.+fracErrs[0])
         self.c.specifyUncertainty(uncName,mbnameC,"tt",1.-fracErrs[1])
         # self.c.specifyUncertainty(uncName,mbnameS,"W",1.+fracErrs[0])
@@ -345,7 +345,7 @@ class CalcSingleLimit:
         sbttresS = self.subDict(self.bkgres,self.sbBins[sbttname])
         # uncertainty on RCS_W (e+mu)/mu
         uncName = "rcsWemu" + mbnameS
-        self.c.addUncertainty(uncName,"lnN")
+        self.c.addUncertainty(uncName,"lnN",group="rcs")
         self.c.specifyUncertainty(uncName,mbnameS,"W",1.+mbres["systematics"]["ratio_mu_elemu"])
         # uncertainty on b tagging
         if not "btag" in self.c.uncertainties:
@@ -368,20 +368,20 @@ class CalcSingleLimit:
         self.c.specifyUncertainty("leptonSF",mbnameS,"tt",1.+mbres["systematics"]["lepSF"])
         self.c.specifyUncertainty("leptonSF",mbnameS,"other",1.+mbres["systematics"]["lepSF"])
         # stat uncertainty on kappaW, kappaTT and kappa_b
-        self.c.addUncertainty("kappaW"+mbnameS,"lnN")
+        self.c.addUncertainty("kappaW"+mbnameS,"lnN",group="kappa")
         self.c.specifyUncertainty("kappaW"+mbnameS,mbnameS,"W",1.+mbres["systematics"]["kappa_W"])
-        self.c.addUncertainty("kappaTT"+mbnameS,"lnN")
+        self.c.addUncertainty("kappaTT"+mbnameS,"lnN",group="kappa")
         self.c.specifyUncertainty("kappaTT"+mbnameS,mbnameS,"tt",1.+mbres["systematics"]["kappa_TT"])
-        self.c.addUncertainty("kappab"+mbnameS,"lnN")
+        self.c.addUncertainty("kappab"+mbnameS,"lnN",group="kappa")
         self.c.specifyUncertainty("kappab"+mbnameS,mbnameS,"tt",1.+mbres["systematics"]["kappa_b"])
         # Rcs systematics W and tt ("linear fit")
         uncName = "rcsW"
         if not uncName in self.c.uncertainties:
-            self.c.addUncertainty(uncName,"lnN")
+            self.c.addUncertainty(uncName,"lnN",group="rcs")
         self.c.specifyUncertainty(uncName,mbnameS,"W",1.+mbres["systematics"]["rcs_W"])
         uncName = "rcsTT"
         if not uncName in self.c.uncertainties:
-            self.c.addUncertainty(uncName,"lnN")
+            self.c.addUncertainty(uncName,"lnN",group="rcs")
         self.c.specifyUncertainty(uncName,mbnameS,"tt",1.+mbres["systematics"]["rcs_tt"])
         # QCD systematics
         self.c.addUncertainty("QCD"+mbnameS,"lnN")
@@ -404,12 +404,12 @@ class CalcSingleLimit:
         self.c.specifyUncertainty("PU",mbnameS,"other",1.+mbres["systematics"]["pileup"])
         # Cross sections & W polarization
         if not "xsecW" in self.c.uncertainties:
-            self.c.addUncertainty("xsecW","lnN")
+            self.c.addUncertainty("xsecW","lnN",group="xsec")
         self.c.specifyUncertainty("xsecW",mbnameS,"W",1.+mbres["systematics"]["Wxsec"])
         self.c.specifyUncertainty("xsecW",mbnameS,"tt",1.+mbres["systematics"]["Wxsec"])
         self.c.specifyUncertainty("xsecW",mbnameS,"other",1.+mbres["systematics"]["Wxsec"])
         if not "xsecTT" in self.c.uncertainties:
-            self.c.addUncertainty("xsecTT","lnN")
+            self.c.addUncertainty("xsecTT","lnN",group="xsec")
         self.c.specifyUncertainty("xsecTT",mbnameS,"W",1.+mbres["systematics"]["TTxsec"])
         self.c.specifyUncertainty("xsecTT",mbnameS,"tt",1.+mbres["systematics"]["TTxsec"])
         self.c.specifyUncertainty("xsecTT",mbnameS,"other",1.+mbres["systematics"]["TTxsec"])
@@ -420,7 +420,7 @@ class CalcSingleLimit:
         self.c.specifyUncertainty("WPol",mbnameS,"other",1.+mbres["systematics"]["Wpol"])
         # stat. uncertainty on signal efficiency
         uncName = "statSeff" + mbnameS
-        self.c.addUncertainty(uncName,"lnN")
+        self.c.addUncertainty(uncName,"lnN",group="statSeff")
         if mbsigres["yield_MB_SR"]>0.001:
             self.c.specifyUncertainty(uncName,mbnameS,"signal", \
                                           1+mbsigres["stat_err_MB_SR"]/mbsigres["yield_MB_SR"])
@@ -463,7 +463,7 @@ class CalcSingleLimit:
         sbnameS = sbname + "S"
         # statistical uncertainty SB CRs
         uncName = "stat" + sbnameC
-        self.c.addUncertainty(uncName,"lnN")
+        self.c.addUncertainty(uncName,"lnN","stat")
         for mbname in mbBinNames:
           bname = mbname[2:]
           mbnameS = mbname + "S"

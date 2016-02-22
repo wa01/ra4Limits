@@ -54,9 +54,10 @@ class cardFileWriter:
       del self.uncertaintyString[name]
       return
     if group!=None:
+      assert not group in self.uncertainties
       if not group in self.groups:
         self.groups[group] = [ ]
-      self.groups[group].append(group)
+      self.groups[group].append(name)
 
   def specifyExpectation(self, b, p, exp):
     self.expectation[(b,p)] = exp
@@ -172,7 +173,7 @@ class cardFileWriter:
         outfile.write(g+" group =")
         for gg in sorted(self.groups[g]):
           outfile.write(" "+gg)
-      outfile.write('\n')
+        outfile.write('\n')
 
     outfile.close()
 
