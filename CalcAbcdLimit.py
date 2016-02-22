@@ -55,8 +55,6 @@ class CalcSingleLimit:
         self.force = False
         self.dir = "."
         self.useBins = range(len(mbBinNames))
-        self.corrSystSize = 1000.0
-        self.corrSystPdf = "lnN"
         self.procNames = [ "W", "tt", "other", "QCD" ]
 
         self.bkgres = bkgres
@@ -81,6 +79,7 @@ class CalcSingleLimit:
         self.kappaVars = { }
         self.paramLines = [ ]
         self.rateParamLines = [ ]
+        self.allRateParams = [ ]
 
     def subDict(self,d,bins):
         return d[bins[0]][bins[1]][bins[2]]
@@ -101,21 +100,44 @@ class CalcSingleLimit:
         return result
 
 
+    def addKappaVar(self,name,p,err):
+        n = self.paramName(name,p)
+        if not n in self.kappaVars:
+            self.kappaVars[n] = 0.
+        self.kappaVars[n] += err**2
+
     def rateParamFormulaLine(self,nameMB,nameSB,p):
         result = self.rateParamName(nameMB+"S",p)
+        if result in self.allRateParams:
+            print "duplicate",result
+        assert not result in self.allRateParams
+        self.allRateParams.append(result)
         result += " rateParam "
-        result += name + " " + p + " (@0*@1/@2*@3) "
+        result += nameMB + "S " + p + " (@0*@1/@2*@3) "
         params = [ self.rateParamName(nameMB+"C",p), self.rateParamName(nameSB+"S",p),  \
                        self.rateParamName(nameSB+"C",p), self.paramName(nameMB+"S",p) ]
-        result += params.join(",")
+        result += ",".join(params)
+        return result
+
+    def paramValueLine(self,name,p,val,err=0.20):
+        result = self.paramName(name,p)
+        assert not result in self.allRateParams
+        self.allRateParams.append(result)
+        result += " param "
+        result += "{0:8.4f}".format(val) + " "
+        #result += "{0:8.3f}".format(err)
         return result
 
     def rateParamValueLine(self,name,p,val):
         result = self.rateParamName(name,p)
+        assert not result in self.allRateParams
+        self.allRateParams.append(result)
         result += " rateParam "
         result += name + " " + p + " "
         result += "{0:8.3f}".format(val) + " "
         result += "[0.," + "{0:8.3f}".format(3*val).strip() + "]"
+        #result += "[" + "{0:8.3f}".format(0.5*val).strip() + ","
+        #result += "{0:8.3f}".format(2*val).strip() + "]"
         return result
 
     def limitSinglePoint(self):
@@ -179,7 +201,7 @@ class CalcSingleLimit:
               #y_truth = sbres["yW_crNJet_0b_"+rDPhi+"_truth"] + \
               #    sbres["yTT_crNJet_0b_"+rDPhi+"_truth"] + \
               #    sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
-              self.c.specifyObservation(sbname+r,int(sbres["y_crNJet_0b_highDPhi"]+0.5))
+              self.c.specifyObservation(sbname+r,int(sbres["y_crNJet_0b_"+rDPhi]+0.5))
               self.c.specifyExpectation(sbname+r,"signal",sbsigres['yield_SB_W_SR']*xsecFactor)
               # self.c.specifyExpectation(sbnameS,"W",sbres["yW_crNJet_0b_"+rDPhi])
               self.c.specifyExpectation(sbname+r,"W",1.)
@@ -197,7 +219,7 @@ class CalcSingleLimit:
               #y_truth = sbres["yW_crNJet_1b_"+rDPhi+"_truth"] + \
               #    sbres["yTT_crNJet_1b_"+rDPhi+"_truth"] + \
               #    sbres["yRest_crNJet_1b_"+rDPhi+"_truth"]
-              self.c.specifyObservation(sbname+r,int(sbres["y_crNJet_1b_highDPhi"]+0.5))
+              self.c.specifyObservation(sbname+r,int(sbres["y_crNJet_1b_"+rDPhi]+0.5))
               self.c.specifyExpectation(sbname+r,"signal",sbsigres['yield_SB_tt_SR']*xsecFactor)
               self.c.specifyExpectation(sbname+r,"W",0.001)
               # self.c.specifyExpectation(sbnameS,"tt",sbres["y_crNJet_1b_"+rDPhi])
@@ -255,8 +277,8 @@ class CalcSingleLimit:
         # self.c.specifyExpectation(mbnameS,"W",mbres["W_pred_final"])
         self.c.specifyExpectation(mbnameS,"tt",1.)
         self.c.specifyExpectation(mbnameS,"W",1.)
-        self.rateParamLines.append(self.rateParamValueLine(mbnameS,"tt",mbres["TT_pred_final"]))
-        self.rateParamLines.append(self.rateParamValueLine(mbnameS,"W",mbres["W_pred_final"]))
+        #self.rateParamLines.append(self.rateParamValueLine(mbnameS,"tt",mbres["TT_pred_final"]))
+        #self.rateParamLines.append(self.rateParamValueLine(mbnameS,"W",mbres["W_pred_final"]))
         assert not mbnameS in self.yieldstt
         self.yieldstt[mbnameS] = mbres["TT_pred_final"]
         assert not mbnameS in self.yieldsW
@@ -313,25 +335,31 @@ class CalcSingleLimit:
         #
         # correlation W regions: B and F / E and F
         #
-        uncName = "corrWBF" + mbname
-        self.c.addUncertainty(uncName,self.corrSystPdf,group="corr")
-        self.c.specifyUncertainty(uncName,"J3"+bname+"S","W",self.corrSystSize)
-        self.c.specifyUncertainty(uncName,mbnameS,"W",self.corrSystSize)
-        uncName = "corrWEF" + mbname
-        self.c.addUncertainty(uncName,self.corrSystPdf,group="corr")
-        self.c.specifyUncertainty(uncName,mbnameC,"W",self.corrSystSize)
-        self.c.specifyUncertainty(uncName,mbnameS,"W",self.corrSystSize)
+        # uncName = "corrWBF" + mbname
+        # self.c.addUncertainty(uncName,self.corrSystPdf,group="corr")
+        # self.c.specifyUncertainty(uncName,"J3"+bname+"S","W",self.corrSystSize)
+        # self.c.specifyUncertainty(uncName,mbnameS,"W",self.corrSystSize)
+        # uncName = "corrWEF" + mbname
+        # self.c.addUncertainty(uncName,self.corrSystPdf,group="corr")
+        # self.c.specifyUncertainty(uncName,mbnameC,"W",self.corrSystSize)
+        # self.c.specifyUncertainty(uncName,mbnameS,"W",self.corrSystSize)
+        kappaW = (self.yieldsW[mbnameS]/self.yieldsW[mbnameC])/(self.yieldsW["J3"+bname+"S"]/self.yieldsW["J3"+bname+"C"])
+        self.paramLines.append(self.paramValueLine(mbnameS,"W",kappaW))
+        self.rateParamLines.append(self.rateParamFormulaLine(mbname,"J3"+bname,"W"))
         #
         # correlation tt regions: D and F / E and F
         #
-        uncName = "corrTTDF" + mbname
-        self.c.addUncertainty(uncName,self.corrSystPdf,group="corr")
-        self.c.specifyUncertainty(uncName,"J4"+bname+"S","tt",self.corrSystSize)
-        self.c.specifyUncertainty(uncName,mbnameS,"tt",self.corrSystSize)
-        uncName = "corrTTEF" + mbname
-        self.c.addUncertainty(uncName,self.corrSystPdf,group="corr")
-        self.c.specifyUncertainty(uncName,mbnameC,"tt",self.corrSystSize)
-        self.c.specifyUncertainty(uncName,mbnameS,"tt",self.corrSystSize)
+        # uncName = "corrTTDF" + mbname
+        # self.c.addUncertainty(uncName,self.corrSystPdf,group="corr")
+        # self.c.specifyUncertainty(uncName,"J4"+bname+"S","tt",self.corrSystSize)
+        # self.c.specifyUncertainty(uncName,mbnameS,"tt",self.corrSystSize)
+        # uncName = "corrTTEF" + mbname
+        # self.c.addUncertainty(uncName,self.corrSystPdf,group="corr")
+        # self.c.specifyUncertainty(uncName,mbnameC,"tt",self.corrSystSize)
+        # self.c.specifyUncertainty(uncName,mbnameS,"tt",self.corrSystSize)
+        kappatt = (self.yieldstt[mbnameS]/self.yieldstt[mbnameC])/(self.yieldstt["J4"+bname+"S"]/self.yieldstt["J4"+bname+"C"])
+        self.paramLines.append(self.paramValueLine(mbnameS,"tt",kappatt))
+        self.rateParamLines.append(self.rateParamFormulaLine(mbname,"J4"+bname,"tt"))
       #
       # (anti-)correlations from fitted W/tt yields
       #
@@ -403,6 +431,7 @@ class CalcSingleLimit:
         uncName = "rcsWemu" + mbnameS
         self.c.addUncertainty(uncName,"lnN",group="rcs")
         self.c.specifyUncertainty(uncName,mbnameS,"W",1.+mbres["systematics"]["ratio_mu_elemu"])
+        # rcs.addKappaVar(mbnameS,"W",mbres["systematics"]["ratio_mu_elemu"])
         # uncertainty on b tagging
         if not "btag" in self.c.uncertainties:
             self.c.addUncertainty("btag","lnN")
@@ -424,21 +453,26 @@ class CalcSingleLimit:
         self.c.specifyUncertainty("leptonSF",mbnameS,"tt",1.+mbres["systematics"]["lepSF"])
         self.c.specifyUncertainty("leptonSF",mbnameS,"other",1.+mbres["systematics"]["lepSF"])
         # stat uncertainty on kappaW, kappaTT and kappa_b
-        self.c.addUncertainty("kappaW"+mbnameS,"lnN",group="kappa")
-        self.c.specifyUncertainty("kappaW"+mbnameS,mbnameS,"W",1.+mbres["systematics"]["kappa_W"])
-        self.c.addUncertainty("kappaTT"+mbnameS,"lnN",group="kappa")
-        self.c.specifyUncertainty("kappaTT"+mbnameS,mbnameS,"tt",1.+mbres["systematics"]["kappa_TT"])
-        self.c.addUncertainty("kappab"+mbnameS,"lnN",group="kappa")
-        self.c.specifyUncertainty("kappab"+mbnameS,mbnameS,"tt",1.+mbres["systematics"]["kappa_b"])
+        # self.c.addUncertainty("kappaW"+mbnameS,"lnN",group="kappa")
+        # self.c.specifyUncertainty("kappaW"+mbnameS,mbnameS,"W",1.+mbres["systematics"]["kappa_W"])
+        self.addKappaVar(mbnameS,"W",mbres["systematics"]["kappa_W"])
+        # self.c.addUncertainty("kappaTT"+mbnameS,"lnN",group="kappa")
+        # self.c.specifyUncertainty("kappaTT"+mbnameS,mbnameS,"tt",1.+mbres["systematics"]["kappa_TT"])
+        self.addKappaVar(mbnameS,"tt",mbres["systematics"]["kappa_TT"])
+        # self.c.addUncertainty("kappab"+mbnameS,"lnN",group="kappa")
+        # self.c.specifyUncertainty("kappab"+mbnameS,mbnameS,"tt",1.+mbres["systematics"]["kappa_b"])
+        self.addKappaVar(mbnameS,"tt",mbres["systematics"]["kappa_b"])
         # Rcs systematics W and tt ("linear fit")
         uncName = "rcsW"
         if not uncName in self.c.uncertainties:
             self.c.addUncertainty(uncName,"lnN",group="rcs")
         self.c.specifyUncertainty(uncName,mbnameS,"W",1.+mbres["systematics"]["rcs_W"])
+        #self.addKappaVars(mbnameS,"W",mbres["systematics"]["rcs_W"])
         uncName = "rcsTT"
         if not uncName in self.c.uncertainties:
             self.c.addUncertainty(uncName,"lnN",group="rcs")
         self.c.specifyUncertainty(uncName,mbnameS,"tt",1.+mbres["systematics"]["rcs_tt"])
+        #self.addKappaVars(mbnameS,"tt",mbres["systematics"]["rcs_tt"])
         # QCD systematics
         self.c.addUncertainty("QCD"+mbnameS,"lnN")
         self.c.specifyUncertainty("QCD"+mbnameS,mbnameS,"W",1.+mbres["systematics"]["QCD"])
@@ -505,32 +539,13 @@ class CalcSingleLimit:
         self.c.specifyUncertainty(uncName,mbnameS,"W",1+mbres["systematics"]["JEC"])
         self.c.specifyUncertainty(uncName,mbnameS,"tt",1+mbres["systematics"]["JEC"])
         self.c.specifyUncertainty(uncName,mbnameS,"other",1+mbres["systematics"]["JEC"])
+        #self.addKappaVar(mbnameS,"tt",mbres["systematics"]["JEC"])
+        #self.addKappaVar(mbnameS,"W",mbres["systematics"]["JEC"])
       #      # WORST CASE SYST
       #      uncName = "worst"+mbnameS
       #      self.c.addUncertainty(uncName,"lnN")
       #      self.c.specifyUncertainty(uncName,mbnameS,"W",1+worstCaseSyst[self.mbBins[mbname][0]][self.mbBins[mbname][1]][self.mbBins[mbname][2]])
 
-      #
-      # SB related systematics propagated to MB
-      #
-      for sbname in sbBinNames:
-        sbres = self.subDict(self.bkgres,self.sbBins[sbname])
-        sbnameC = sbname + "C"
-        sbnameS = sbname + "S"
-        # statistical uncertainty SB CRs
-        uncName = "stat" + sbnameC
-        self.c.addUncertainty(uncName,"lnN","stat")
-        for mbname in mbBinNames:
-          bname = mbname[2:]
-          mbnameS = mbname + "S"
-          if "J3"+bname==sbname:
-              wYield = sbres["yW_crNJet_0b_lowDPhi"]
-              wVar = sbres["yW_Var_crNJet_0b_lowDPhi"]
-              self.c.specifyUncertainty(uncName,mbnameS,"W",1.+sqrt(wVar)/wYield)
-          elif "J4"+bname==sbname:
-              ttYield = sbres["y_crNJet_1b_lowDPhi"]
-              ttVar = sbres["y_crNJet_1b_lowDPhi"]
-              self.c.specifyUncertainty(uncName,mbnameS,"tt",1.+sqrt(ttVar)/ttYield)
 
 
       #
@@ -583,8 +598,16 @@ class CalcSingleLimit:
           txt.write("# Signal rates have been scaled by "+str(xsecFactor)+" !!!!!!\n")
           txt.write("#\n")
 
+      txt.write("\n")
       for l in sorted(self.rateParamLines):
           txt.write(l+"\n")
+
+      txt.write("\n")
+      for l in sorted(self.paramLines):
+          k = l.split()[0]
+          l += "{0:8.3f}".format(sqrt(self.kappaVars[k]))
+          txt.write(l+"\n")
+
 #      txt.write("#\n")
 #      txt.write("# List of uncertainties\n")
 #      txt.write("#\n")
