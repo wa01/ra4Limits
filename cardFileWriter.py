@@ -14,6 +14,7 @@ class cardFileWriter:
     self.maxUncNameWidth = 15
     self.maxUncStrWidth = 30
     self.hasContamination=False
+    self.groups = {}
 
   def reset(self):
     self.__init__()	
@@ -33,7 +34,7 @@ class cardFileWriter:
     self.bins.append(name)
     self.processes[name] = ["signal"]+processes
 
-  def addUncertainty(self, name, t, n=0):
+  def addUncertainty(self, name, t, n=0, group=None):
     if len(name)>self.maxUncNameWidth:
       print "That's too long:",name,"Max. length is", self.maxUncNameWidth
       del self.uncertaintyString[name]
@@ -52,6 +53,10 @@ class cardFileWriter:
       print "That's too long:",self.uncertaintyString[name],"Max. length is", self.maxUncStrWidth
       del self.uncertaintyString[name]
       return
+    if group!=None:
+      if not group in self.groups:
+        self.groups[group] = [ ]
+      self.groups[group].append(group)
 
   def specifyExpectation(self, b, p, exp):
     self.expectation[(b,p)] = exp
@@ -160,7 +165,15 @@ class cardFileWriter:
     for u in self.uncertainties:
       outfile.write( u.ljust(self.maxUncNameWidth)+' '+self.uncertaintyString[u].ljust(self.maxUncStrWidth)+' '+
                      ''.join( [''.join([self.getUncertaintyString((u,b,p)).rjust(self.defWidth) for p in self.processes[b]] ) for b in self.bins]) +'\n')
-      
+
+    if len(self.groups.keys())>0:
+      outfile.write('\n')
+      for g in sorted(self.groups.keys()):
+        outfile.write(g+" group =")
+        for gg in sorted(self.groups[g]):
+          outfile.write(" "+gg)
+      outfile.write('\n')
+
     outfile.close()
 
   def readResFile(self, fname):
