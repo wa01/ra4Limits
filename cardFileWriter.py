@@ -167,13 +167,13 @@ class cardFileWriter:
       outfile.write( u.ljust(self.maxUncNameWidth)+' '+self.uncertaintyString[u].ljust(self.maxUncStrWidth)+' '+
                      ''.join( [''.join([self.getUncertaintyString((u,b,p)).rjust(self.defWidth) for p in self.processes[b]] ) for b in self.bins]) +'\n')
 
-    if len(self.groups.keys())>0:
-      outfile.write('\n')
-      for g in sorted(self.groups.keys()):
-        outfile.write(g+" group =")
-        for gg in sorted(self.groups[g]):
-          outfile.write(" "+gg)
-        outfile.write('\n')
+    #if len(self.groups.keys())>0:
+    #  outfile.write('\n')
+    #  for g in sorted(self.groups.keys()):
+    #    outfile.write(g+" group =")
+    #    for gg in sorted(self.groups[g]):
+    #      outfile.write(" "+gg)
+    #    outfile.write('\n')
 
     outfile.close()
 
