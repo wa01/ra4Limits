@@ -142,7 +142,9 @@ parser.add_argument('--nolimit', help='do not run limit', action='store_true')
 parser.add_argument('--blind', help='use blind mode', action='store_true')
 parser.add_argument('-f', '--force', dest='force', help='replace output files', action='store_true')
 parser.add_argument('-d', '--dir', dest='dir', help='output directory', default=None)
-parser.add_argument('--SRonly', help='use only SRs', action='store_true')
+#parser.add_argument('--SRonly', help='use only SRs', action='store_true')
+parser.add_argument('--method', help='limit setting method', dest='method', \
+                      choices=['CalcSingleLimit','CalcLimitSRonly','CalcAbcdLimit'],default=['CalcSingleLimit'])
 parser.add_argument('--bins', help='list of bin indices to be used', 
                     dest='bins', default=None)
 parser.add_argument('--signals', help='list of signal indices to be used', 
@@ -177,10 +179,16 @@ if args.masses!=None:
   assert len(ms)==2
   useSignalMasses = ( ms[0], ms[1] )
 
-if args.SRonly:
-  from CalcLimitSRonly import *
-else:
+#if args.SRonly:
+#  from CalcLimitSRonly import *
+#else:
+#  from CalcSingleLimit import *
+if args.method=='CalcSingleLimit':
   from CalcSingleLimit import *
+elif args.method=='CalcLimitSRonly':
+  from CalcLimitSRonly import *
+elif args.method=='CalcAbcdLimit':
+  from CalcAbcdLimit import *
   
 #ROOT.gROOT.LoadMacro("$CMSSW_BASE/src/Workspace/HEPHYPythonTools/scripts/root/tdrstyle.C")
 #ROOT.setTDRStyle()
