@@ -123,18 +123,19 @@ def ltBinToLabel(ltBin):
 
 def htBinToLabel(htBin):
   # simplified to lower limit
-  idxs = [ None, None ]
-  for i in range(2):
-    if htBin[i]==500:
-      idxs[i] = 1
-    elif htBin[i]==750:
-      idxs[i] = 2
-    elif htBin[i]==1000:
-      idxs[i] = 3
-    elif htBin[i]==-1:
-      idxs[i] = 4
-    assert idxs[i]!=None
-  return "H"+str(idxs[0])
+  idx = None
+  if htBin == (500,750):
+    idx = 1
+  elif htBin == (500,1000):
+    idx = 2
+  elif htBin == (500,-1):
+    idx = 3
+  elif htBin == (750,-1):
+    idx = 4
+  elif htBin == (1000,-1):
+    idx = 5
+  assert idx!=None
+  return "H"+str(idx)
 #  return "H"+"".join([str(x) for x in range(idxs[0],idxs[1])])
 
 parser = argparse.ArgumentParser()
@@ -227,8 +228,8 @@ lumi_origin = 3
 #bkgres = pickle.load(file(os.path.expandvars("pickles150125/resultsFinal_withSystematics_pkl")))
 #sigres = pickle.load(file(os.path.expandvars("pickles160218/allSignals_2p25_allSyst_approval_pkl")))
 #bkgres = pickle.load(file(os.path.expandvars("pickles160218/resultsFinal_withSystematics_pkl")))
-sigres = pickle.load(file(os.path.expandvars("pickles160222/allSignals_2p25_allSyst_approval_pkl")))
-bkgres = pickle.load(file(os.path.expandvars("pickles160222/resultsFinal_withSystematics_pkl")))
+sigres = pickle.load(file(os.path.expandvars("pickles160223/allSignals_2p25_allSyst_approval_pkl")))
+bkgres = pickle.load(file(os.path.expandvars("pickles160223/resultsFinal_withSystematics_pkl")))
 
 #pdg = 'pos'
 #pdg = 'neg'

@@ -2,6 +2,22 @@
 import re
 from sys import argv, stdout, stderr, exit
 from optparse import OptionParser
+from HiggsAnalysis.CombinedLimit.DatacardParser import *
+
+dcparser = OptionParser()
+addDatacardParserOptions(dcparser)
+(dcoptions, dcargs) = dcparser.parse_args([])
+dc = parseCard(file("limit_1200_800.txt"),dcoptions)
+rateParms = { }
+for r in dc.rateParams:
+    assert len(dc.rateParams[r])==1
+    assert len(dc.rateParams[r][0])==2
+    if len(dc.rateParams[r][0][0])==3:
+        n = dc.rateParams[r][0][0][0]
+        v = float(dc.rateParams[r][0][0][1])
+        vmin,vmax = eval(dc.rateParams[r][0][1])
+        assert not n in rateParms
+        rateParms[n] = [ v, vmin, vmax ]
 
 # import ROOT with a fix to get batch mode (http://root.cern.ch/phpBB3/viewtopic.php?t=3198)
 hasHelp = False
@@ -47,6 +63,12 @@ results = {
     "corrTTEF" : { },
     "corrWBF" : { },
     "corrWEF" : { },
+    "j3" : { },
+    "j4" : { },
+    "j5" : { },
+    "j6" : { },
+    "j8" : { },
+    "kJ" : { },
 #    "jec" : { },
     "kappaTT" : { },
     "kappaW" : { },
@@ -77,9 +99,12 @@ for i in range(fpf_b.getSize()):
 
     mean_p, sigma_p = 0,0
     if nuis_p == None:
-        if not options.abs: continue
-        print "No prefit for ",name
-        continue
+        #print "Skipping ",cat,name
+        #del results[cat][name]
+        assert name in rateParms
+#        if not options.abs: continue
+#        print "No prefit for ",name
+#        continue
     else:
         print name,nuis_p.getMin(),nuis_p.getMax()
         mean_p, sigma_p = (nuis_p.getVal(), nuis_p.getError())
@@ -117,8 +142,13 @@ for c in results:
     ymin = None
     ymax = None
     for i,n in enumerate(names):
-        y = results[c][n]["mean_p"]
-        ey = results[c][n]["sigma_p"]
+        if not "mean_p" in results[c][n]:
+            assert n in rateParms
+            y = rateParms[n][0]
+            ey = rateParms[n][0]
+        else:
+            y = results[c][n]["mean_p"]
+            ey = results[c][n]["sigma_p"]
         if ymin==None or (y-ey)<ymin:
             ymin = y - ey
         if ymax==None or (y+ey)>ymax:

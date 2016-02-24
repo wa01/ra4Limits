@@ -172,6 +172,7 @@ class CalcSingleLimit:
         sbnameS = sbname + "S"
         self.c.addBin(sbnameS,self.procNames,sbnameS)
         sbres = self.subDict(self.bkgres,self.sbBins[sbname])
+        print "Setting sbres to ",self.sbBins[sbname]
         sbsigres = self.subDict(self.sigres,self.sbBins[sbname])["signals"][self.mglu][self.mlsp]
         #
         # debug
@@ -188,12 +189,13 @@ class CalcSingleLimit:
             rDPhi += "DPhi"
             # calculate missing numbers for both low and high dPhi
             # yield (W) = observed - estimated tt # others are neglected in yield
-            wYield = sbres["y_crNJet_0b_"+rDPhi] - sbres["yTT_crNJet_0b_"+rDPhi] - \
-                sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
+            wYield = sbres["y_crNJet_0b_"+rDPhi] - sbres["yTT_crNJet_0b_"+rDPhi]
+                # - sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
             sbres["yW_crNJet_0b_"+rDPhi] = wYield
             # error on wYield
             # yield (W) = observed - estimated tt # others are neglected in yield
-            wVar = sbres["y_Var_crNJet_0b_"+rDPhi] + sbres["yTT_Var_crNJet_0b_"+rDPhi] + sbres["yRest_Var_crNJet_0b_"+rDPhi+"_truth"]
+            wVar = sbres["y_Var_crNJet_0b_"+rDPhi] + sbres["yTT_Var_crNJet_0b_"+rDPhi]
+              # + sbres["yRest_Var_crNJet_0b_"+rDPhi+"_truth"]
             sbres["yW_Var_crNJet_0b_"+rDPhi] = wVar
             #
             # define W sideband
@@ -205,12 +207,14 @@ class CalcSingleLimit:
               #    sbres["yTT_crNJet_0b_"+rDPhi+"_truth"] + \
               #    sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
               self.c.specifyObservation(sbname+r,int(sbres["y_crNJet_0b_"+rDPhi]+0.5))
+              print "Setting observation for ",sbname+r,"to",sbres["y_crNJet_0b_"+rDPhi]
               self.c.specifyExpectation(sbname+r,"signal",sbsigres['yield_SB_W_SR']*xsecFactor)
               # self.c.specifyExpectation(sbnameS,"W",sbres["yW_crNJet_0b_"+rDPhi])
+              yW = sbres["yW_crNJet_0b_"+rDPhi]
               self.c.specifyExpectation(sbname+r,"W",1.)
-              self.rateParamLines.append(self.rateParamValueLine(sbname+r,"W",sbres["yW_crNJet_0b_"+rDPhi]))
+              self.rateParamLines.append(self.rateParamValueLine(sbname+r,"W",yW))
               assert not (sbname+r) in self.yieldsW
-              self.yieldsW[sbname+r] = sbres["yW_crNJet_0b_"+rDPhi]
+              self.yieldsW[sbname+r] = yW
               self.c.specifyExpectation(sbname+r,"tt",sbres["yTT_crNJet_0b_"+rDPhi])
               self.c.specifyExpectation(sbname+r,"other",sbres["yRest_crNJet_0b_"+rDPhi+"_truth"])
               self.c.specifyExpectation(sbname+r,"QCD",0.001) # QCD is neglected in yield
@@ -226,13 +230,14 @@ class CalcSingleLimit:
               self.c.specifyExpectation(sbname+r,"signal",sbsigres['yield_SB_tt_SR']*xsecFactor)
               self.c.specifyExpectation(sbname+r,"W",0.001)
               # self.c.specifyExpectation(sbnameS,"tt",sbres["y_crNJet_1b_"+rDPhi])
+              ytt = sbres["y_crNJet_1b_"+rDPhi] - sbres["yQCD_crNJet_1b_"+rDPhi]
               self.c.specifyExpectation(sbname+r,"tt",1.)
-              self.rateParamLines.append(self.rateParamValueLine(sbname+r,"tt",sbres["y_crNJet_1b_"+rDPhi]))
+              self.rateParamLines.append(self.rateParamValueLine(sbname+r,"tt",ytt))
               assert not (sbname+r) in self.yieldstt
-              self.yieldstt[sbname+r] = sbres["y_crNJet_1b_"+rDPhi]
+              self.yieldstt[sbname+r] = ytt
               self.c.specifyExpectation(sbname+r,"other",0.001) 
 #              self.c.specifyExpectation(sbname+r,"other",sbres["yRest_crNJet_1b_"+rDPhi+"_truth"]) 
-              self.c.specifyExpectation(sbname+r,"QCD",sbres["yQCD_crNJet_1b_highDPhi"])
+              self.c.specifyExpectation(sbname+r,"QCD",sbres["yQCD_crNJet_1b_"+rDPhi])
 
       for mbname in mbBinNames:
         mbres = self.subDict(self.bkgres,self.mbBins[mbname])
@@ -255,12 +260,14 @@ class CalcSingleLimit:
         # self.c.specifyExpectation(mbnameC,"W",mbres["yW_srNJet_0b_"+rDPhi])
         self.c.specifyExpectation(mbnameC,"tt",1.)
         self.c.specifyExpectation(mbnameC,"W",1.)
-        self.rateParamLines.append(self.rateParamValueLine(mbnameC,"tt",mbres["yTT_srNJet_0b_"+rDPhi]))
-        self.rateParamLines.append(self.rateParamValueLine(mbnameC,"W",mbres["yW_srNJet_0b_"+rDPhi]))
+        ytt = mbres["yTT_srNJet_0b_"+rDPhi]
+        yW = mbres["yW_srNJet_0b_"+rDPhi]
+        self.rateParamLines.append(self.rateParamValueLine(mbnameC,"tt",ytt))
+        self.rateParamLines.append(self.rateParamValueLine(mbnameC,"W",yW))
         assert not mbnameC in self.yieldstt
-        self.yieldstt[mbnameC] = mbres["yTT_srNJet_0b_"+rDPhi]
+        self.yieldstt[mbnameC] = ytt
         assert not mbnameC in self.yieldsW
-        self.yieldsW[mbnameC] = mbres["yW_srNJet_0b_"+rDPhi]
+        self.yieldsW[mbnameC] = yW
         self.c.specifyExpectation(mbnameC,"tt",1.)
         self.c.specifyExpectation(mbnameC,"W",1.)
         self.c.specifyExpectation(mbnameC,"other",mbres["yRest_srNJet_0b_"+rDPhi+"_truth"])
@@ -278,14 +285,16 @@ class CalcSingleLimit:
         self.c.specifyExpectation(mbnameS,"signal",mbsigres['yield_MB_SR']*xsecFactor)
         # self.c.specifyExpectation(mbnameS,"tt",mbres["TT_pred_final"])
         # self.c.specifyExpectation(mbnameS,"W",mbres["W_pred_final"])
+        ytt = mbres["TT_pred_final"]
+        yW = mbres["W_pred_final"]
         self.c.specifyExpectation(mbnameS,"tt",1.)
         self.c.specifyExpectation(mbnameS,"W",1.)
-        self.rateParamLines.append(self.rateParamValueLine(mbnameS,"tt",mbres["TT_pred_final"],comment=True))
-        self.rateParamLines.append(self.rateParamValueLine(mbnameS,"W",mbres["W_pred_final"],comment=True))
+        self.rateParamLines.append(self.rateParamValueLine(mbnameS,"tt",ytt,comment=True))
+        self.rateParamLines.append(self.rateParamValueLine(mbnameS,"W",yW,comment=True))
         assert not mbnameS in self.yieldstt
-        self.yieldstt[mbnameS] = mbres["TT_pred_final"]
+        self.yieldstt[mbnameS] = ytt
         assert not mbnameS in self.yieldsW
-        self.yieldsW[mbnameS] = mbres["W_pred_final"]
+        self.yieldsW[mbnameS] = yW
         self.c.specifyExpectation(mbnameS,"other",mbres["Rest_truth"])
         self.c.specifyExpectation(mbnameS,"QCD",0.001)
 
@@ -346,7 +355,8 @@ class CalcSingleLimit:
         # self.c.addUncertainty(uncName,self.corrSystPdf,group="corr")
         # self.c.specifyUncertainty(uncName,mbnameC,"W",self.corrSystSize)
         # self.c.specifyUncertainty(uncName,mbnameS,"W",self.corrSystSize)
-        kappaW = (self.yieldsW[mbnameS]/self.yieldsW[mbnameC])/(self.yieldsW["J3"+bname+"S"]/self.yieldsW["J3"+bname+"C"])
+        # kappaW = (self.yieldsW[mbnameS]/self.yieldsW[mbnameC])/(self.yieldsW["J3"+bname+"S"]/self.yieldsW["J3"+bname+"C"])
+        kappaW = mbres["W_kappa"]
         self.paramLines.append(self.paramValueLine(mbnameS,"W",kappaW))
         self.rateParamLines.append(self.rateParamFormulaLine(mbname,"J3"+bname,"W"))
         #
@@ -360,7 +370,8 @@ class CalcSingleLimit:
         # self.c.addUncertainty(uncName,self.corrSystPdf,group="corr")
         # self.c.specifyUncertainty(uncName,mbnameC,"tt",self.corrSystSize)
         # self.c.specifyUncertainty(uncName,mbnameS,"tt",self.corrSystSize)
-        kappatt = (self.yieldstt[mbnameS]/self.yieldstt[mbnameC])/(self.yieldstt["J4"+bname+"S"]/self.yieldstt["J4"+bname+"C"])
+        # kappatt = (self.yieldstt[mbnameS]/self.yieldstt[mbnameC])/(self.yieldstt["J4"+bname+"S"]/self.yieldstt["J4"+bname+"C"])
+        kappatt = mbres["TT_kappa"]*mbres["TT_rCS_fits_MC"]["k_0b/1b_btag"]
         self.paramLines.append(self.paramValueLine(mbnameS,"tt",kappatt))
         self.rateParamLines.append(self.rateParamFormulaLine(mbname,"J4"+bname,"tt"))
       #
