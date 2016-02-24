@@ -5,30 +5,11 @@ from optparse import OptionParser
 from HiggsAnalysis.CombinedLimit.DatacardParser import *
 
 
-# import ROOT with a fix to get batch mode (http://root.cern.ch/phpBB3/viewtopic.php?t=3198)
-hasHelp = False
-#for X in ("-h", "-?", "--help"):
-#    if X in argv:
-#        hasHelp = True
-#        argv.remove(X)
-#argv.append( '-b-' )
 import ROOT
 #ROOT.gROOT.SetBatch(True)
 ROOT.gSystem.Load("libHiggsAnalysisCombinedLimit")
-#argv.remove( '-b-' )
-if hasHelp: argv.append("-h")
 
 parser = OptionParser(usage="usage: %prog [options] in.root  \nrun with --help to get list of options")
-parser.add_option("--vtol", "--val-tolerance", dest="vtol", default=0.30, type="float", help="Report nuisances whose value changes by more than this amount of sigmas")
-parser.add_option("--stol", "--sig-tolerance", dest="stol", default=0.10, type="float", help="Report nuisances whose sigma changes by more than this amount")
-parser.add_option("--vtol2", "--val-tolerance2", dest="vtol2", default=2.0, type="float", help="Report severely nuisances whose value changes by more than this amount of sigmas")
-parser.add_option("--stol2", "--sig-tolerance2", dest="stol2", default=0.50, type="float", help="Report severely nuisances whose sigma changes by more than this amount")
-parser.add_option("-a", "--all",      dest="all",    default=False,  action="store_true", help="Print all nuisances, even the ones which are unchanged w.r.t. pre-fit values.")
-parser.add_option("-A", "--absolute", dest="abs",    default=False,  action="store_true", help="Report also absolute values of nuisance values and errors, not only the ones normalized to the input sigma")
-parser.add_option("-p", "--poi",      dest="poi",    default="r",    type="string",  help="Name of signal strength parameter (default is 'r' as per text2workspace.py)")
-parser.add_option("-f", "--format",   dest="format", default="text", type="string",  help="Output format ('text', 'latex', 'twiki'")
-parser.add_option("-g", "--histogram", dest="plotfile", default=None, type="string", help="If true, plot the pulls of the nuisances to the given file.")
-
 (options, args) = parser.parse_args()
 if len(args) == 0:
     parser.print_usage()
@@ -52,9 +33,12 @@ for r in dc.rateParams:
 file = ROOT.TFile(args[1])
 if file == None: raise RuntimeError, "Cannot open file %s" % args[0]
 fit_b  = file.Get("fit_b")
+fit_s  = file.Get("fit_s")
 fpf_b = fit_b.floatParsFinal()
+fpf_s = fit_s.floatParsFinal()
 prefit = file.Get("nuisances_prefit")
 if fit_b == None or fit_b.ClassName()   != "RooFitResult": raise RuntimeError, "File %s does not contain the output of the background fit 'fit_b'" % args[0]
+if fit_s == None or fit_s.ClassName()   != "RooFitResult": raise RuntimeError, "File %s does not contain the output of the background fit 'fit_b'" % args[0]
 if prefit == None or prefit.ClassName() != "RooArgSet":    raise RuntimeError, "File %s does not contain the prefit nuisances 'nuisances_prefit'"  % args[0]
 
 results = {
@@ -87,7 +71,7 @@ results = {
 for i in range(fpf_b.getSize()):
     nuis_b = fpf_b.at(i)
     name   = nuis_b.GetName();
-#    nuis_b = fpf_b.find(name)
+    nuis_s = fpf_s.find(name)
     nuis_p = prefit.find(name)
 
     cat = "other"
@@ -115,12 +99,19 @@ for i in range(fpf_b.getSize()):
         if nuis_x == None:
             pass
         else:
-            results[cat][name]["nuis_val"] = nuis_x.getVal()
-            results[cat][name]["nuis_err"] = nuis_x.getError()
+            results[cat][name]["nuis_b_val"] = nuis_x.getVal()
+            results[cat][name]["nuis_b_err"] = nuis_x.getError()
+    for fit_name, nuis_x in [('s', nuis_s)]:
+        if nuis_x == None:
+            pass
+        else:
+            results[cat][name]["nuis_s_val"] = nuis_x.getVal()
+            results[cat][name]["nuis_s_err"] = nuis_x.getError()
 
 ROOT.gStyle.SetOptTitle(0)
 ROOT.gROOT.cd()
 canvases = [ ]
+legends = [ ]
 gobjects = { }
 for c in results:
     names = sorted(results[c].keys())
@@ -133,51 +124,75 @@ for c in results:
     xaxis = gobjects[c][-1].GetXaxis()
     for i,n in enumerate(names):
         xaxis.SetBinLabel(i+1,n)
-    for postfix in [ "pre", "post" ]:
-        g = ROOT.TGraphErrors()
+    for postfix in [ "pre", "postb", "posts" ]:
+        g = ROOT.TGraphAsymmErrors()
         g.SetName("g"+cat+postfix)
         gobjects[c].append(g)
         g.SetLineWidth(2)
-    gobjects[c][1].SetLineColor(ROOT.kBlue)
-    gobjects[c][2].SetLineColor(ROOT.kRed)
+    gobjects[c][1].SetLineColor(ROOT.kGray)
+    gobjects[c][1].SetFillColor(ROOT.kGray)
+    gobjects[c][2].SetLineColor(ROOT.kBlue)
+    gobjects[c][3].SetLineColor(ROOT.kRed)
     ymin = None
     ymax = None
     for i,n in enumerate(names):
         if not "mean_p" in results[c][n]:
             assert n in rateParms
             y = rateParms[n][0]
-            ey = rateParms[n][0]
+            eyl = y - rateParms[n][1]
+            eyh = rateParms[n][2] - y
         else:
             y = results[c][n]["mean_p"]
             ey = results[c][n]["sigma_p"]
+            eyl = ey
+            eyh = ey
+        if ymin==None or (y-eyl)<ymin:
+            ymin = y - eyl
+        if ymax==None or (y+eyh)>ymax:
+            ymax = y + eyh
+        gobjects[c][1].SetPoint(i,float(i),y)
+        gobjects[c][1].SetPointError(i,0.40,0.40,eyl,eyh)
+
+        y = results[c][n]["nuis_b_val"]
+        ey = results[c][n]["nuis_b_err"]
         if ymin==None or (y-ey)<ymin:
             ymin = y - ey
         if ymax==None or (y+ey)>ymax:
             ymax = y + ey
-        gobjects[c][1].SetPoint(i,float(i)-0.20,y)
-        gobjects[c][1].SetPointError(i,0.20,ey)
+        gobjects[c][2].SetPoint(i,float(i)-0.20,y)
+        gobjects[c][2].SetPointError(i,0.20,0.20,ey,ey)
 
-        y = results[c][n]["nuis_val"]
-        ey = results[c][n]["nuis_err"]
+        y = results[c][n]["nuis_s_val"]
+        ey = results[c][n]["nuis_s_err"]
         if ymin==None or (y-ey)<ymin:
             ymin = y - ey
         if ymax==None or (y+ey)>ymax:
             ymax = y + ey
-        gobjects[c][2].SetPoint(i,float(i)+0.20,y)
-        gobjects[c][2].SetPointError(i,0.20,ey)
+        gobjects[c][3].SetPoint(i,float(i)+0.20,y)
+        gobjects[c][3].SetPointError(i,0.20,0.20,ey,ey)
 
-    dy = ymax - ymin
-    gobjects[c][0].SetMinimum(ymin-0.05*dy)
-    gobjects[c][0].SetMaximum(ymax+0.05*dy)
     canvases.append(ROOT.TCanvas("c"+c,"c"+c,800,600))
+    if c.startswith("j"):
+        gobjects[c][0].SetMinimum(ymax/5000.)
+        gobjects[c][0].SetMaximum(5*ymax)
+        canvases[-1].SetLogy(1)
+    else:
+        dy = ymax - ymin
+        gobjects[c][0].SetMinimum(ymin-0.05*dy)
+        gobjects[c][0].SetMaximum(ymax+0.05*dy)
     gobjects[c][0].Draw()
-    gobjects[c][1].Draw("e0 z same")
+    gobjects[c][1].Draw("e2 z same")
+    if c.startswith("j"):
+        gobjects[c][1].Draw("p same")
     gobjects[c][2].Draw("e0 z same")
+    gobjects[c][3].Draw("e0 z same")
     leg = ROOT.TLegend(0.68,0.78,0.88,0.88)
+    legends.append(leg)
     leg.SetFillColor(ROOT.kWhite)
     leg.SetBorderSize(0)
-    leg.AddEntry(gobjects[c][1],"Prefit","l")
+    leg.AddEntry(gobjects[c][1],"Prefit","f")
     leg.AddEntry(gobjects[c][2],"Post bkg fit","l")
+    leg.AddEntry(gobjects[c][3],"Post sig+bkg fit","l")
     leg.Draw()
     canvases[-1].Update()
     canvases[-1].SaveAs("nuisances-"+c+".pdf")
