@@ -4,20 +4,6 @@ from sys import argv, stdout, stderr, exit
 from optparse import OptionParser
 from HiggsAnalysis.CombinedLimit.DatacardParser import *
 
-dcparser = OptionParser()
-addDatacardParserOptions(dcparser)
-(dcoptions, dcargs) = dcparser.parse_args([])
-dc = parseCard(file("limit_1200_800.txt"),dcoptions)
-rateParms = { }
-for r in dc.rateParams:
-    assert len(dc.rateParams[r])==1
-    assert len(dc.rateParams[r][0])==2
-    if len(dc.rateParams[r][0][0])==3:
-        n = dc.rateParams[r][0][0][0]
-        v = float(dc.rateParams[r][0][0][1])
-        vmin,vmax = eval(dc.rateParams[r][0][1])
-        assert not n in rateParms
-        rateParms[n] = [ v, vmin, vmax ]
 
 # import ROOT with a fix to get batch mode (http://root.cern.ch/phpBB3/viewtopic.php?t=3198)
 hasHelp = False
@@ -48,7 +34,22 @@ if len(args) == 0:
     parser.print_usage()
     exit(1)
 
-file = ROOT.TFile(args[0])
+dcparser = OptionParser()
+addDatacardParserOptions(dcparser)
+(dcoptions, dcargs) = dcparser.parse_args([])
+dc = parseCard(file(args[0]),dcoptions)
+rateParms = { }
+for r in dc.rateParams:
+    assert len(dc.rateParams[r])==1
+    assert len(dc.rateParams[r][0])==2
+    if len(dc.rateParams[r][0][0])==3:
+        n = dc.rateParams[r][0][0][0]
+        v = float(dc.rateParams[r][0][0][1])
+        vmin,vmax = eval(dc.rateParams[r][0][1])
+        assert not n in rateParms
+        rateParms[n] = [ v, vmin, vmax ]
+
+file = ROOT.TFile(args[1])
 if file == None: raise RuntimeError, "Cannot open file %s" % args[0]
 fit_b  = file.Get("fit_b")
 fpf_b = fit_b.floatParsFinal()
