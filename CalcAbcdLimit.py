@@ -108,17 +108,28 @@ class CalcSingleLimit:
             self.kappaVars[n] = 0.
         self.kappaVars[n] += err**2
 
-    def rateParamFormulaLine(self,nameMB,nameSB,p,yWtt):
+    def crFormulaLine(self,nameMB,nameSB,p,yWtt):
+        result = self.rateParamName(nameMB+"C",p)
+        if result in self.allRateParams:
+            print "duplicate",result
+        assert not result in self.allRateParams
+        self.allRateParams.append(result)
+        result += " rateParam "
+        result += nameMB + "C " + p + " (" + "{0:8.3f}".format(yWtt[p]).strip() + "*(1"
+        result += "+" if yWtt["e"+p]>0 else "-"
+        result += "{0:8.3f}".format(abs(yWtt["e"+p])).strip() + "*@0)) "
+        result += "yWtt"+nameMB
+        return result
+
+    def srFormulaLine(self,nameMB,nameSB,p):
         result = self.rateParamName(nameMB+"S",p)
         if result in self.allRateParams:
             print "duplicate",result
         assert not result in self.allRateParams
         self.allRateParams.append(result)
         result += " rateParam "
-        result += nameMB + "S " + p + " (" + "{0:8.3f}".format(yWtt[p]).strip() + "*(1"
-        result += "+" if yWtt["e"+p]>0 else "-"
-        result += "{0:8.3f}".format(abs(yWtt["e"+p])).strip() + "*@0)*@1/@2*@3) "
-        params = [ "yWtt"+nameMB, self.rateParamName(nameSB+"S",p),  \
+        result += nameMB + "S " + p + " (@0*@1/@2*@3) "
+        params = [ self.rateParamName(nameMB+"C",p), self.rateParamName(nameSB+"S",p),  \
                        self.rateParamName(nameSB+"C",p), self.paramName(nameMB+"S",p) ]
         result += ",".join(params)
         return result
@@ -201,6 +212,7 @@ class CalcSingleLimit:
         for r in [ "C", "S" ]:
             rDPhi = "low" if r=="C" else "high"
             rDPhi += "DPhi"
+            rSig = "CR" if r=="C" else "SR"
             # calculate missing numbers for both low and high dPhi
             # yield (W) = observed - estimated tt # others are neglected in yield
             wYield = sbres["y_crNJet_0b_"+rDPhi] - sbres["yTT_crNJet_0b_"+rDPhi]
@@ -222,7 +234,7 @@ class CalcSingleLimit:
               #    sbres["yRest_crNJet_0b_"+rDPhi+"_truth"]
               self.c.specifyObservation(sbname+r,int(sbres["y_crNJet_0b_"+rDPhi]+0.5))
               print "Setting observation for ",sbname+r,"to",sbres["y_crNJet_0b_"+rDPhi]
-              self.c.specifyExpectation(sbname+r,"signal",sbsigres['yield_SB_W_SR']*xsecFactor)
+              self.c.specifyExpectation(sbname+r,"signal",sbsigres['yield_SB_W_'+rSig]*xsecFactor)
               # self.c.specifyExpectation(sbnameS,"W",sbres["yW_crNJet_0b_"+rDPhi])
               yW = sbres["yW_crNJet_0b_"+rDPhi]
               self.c.specifyExpectation(sbname+r,"W",1.)
@@ -241,7 +253,7 @@ class CalcSingleLimit:
               #    sbres["yTT_crNJet_1b_"+rDPhi+"_truth"] + \
               #    sbres["yRest_crNJet_1b_"+rDPhi+"_truth"]
               self.c.specifyObservation(sbname+r,int(sbres["y_crNJet_1b_"+rDPhi]+0.5))
-              self.c.specifyExpectation(sbname+r,"signal",sbsigres['yield_SB_tt_SR']*xsecFactor)
+              self.c.specifyExpectation(sbname+r,"signal",sbsigres['yield_SB_tt_'+rSig]*xsecFactor)
               self.c.specifyExpectation(sbname+r,"W",0.001)
               # self.c.specifyExpectation(sbnameS,"tt",sbres["y_crNJet_1b_"+rDPhi])
               ytt = sbres["y_crNJet_1b_"+rDPhi] - sbres["yQCD_crNJet_1b_"+rDPhi]
@@ -252,6 +264,63 @@ class CalcSingleLimit:
               self.c.specifyExpectation(sbname+r,"other",0.001) 
 #              self.c.specifyExpectation(sbname+r,"other",sbres["yRest_crNJet_1b_"+rDPhi+"_truth"]) 
               self.c.specifyExpectation(sbname+r,"QCD",sbres["yQCD_crNJet_1b_"+rDPhi])
+
+      #
+      # (anti-)correlations from fitted W/tt yields
+      #
+      for mbname in mbBinNames:
+        bname = mbname[2:]
+        mbnameC = mbname + "C"
+        mbnameS = mbname + "S"
+        mbres = self.subDict(self.bkgres,self.mbBins[mbname])
+        # mbsigres = self.subDict(self.sigres,self.mbBins[mbname])
+
+        sbWname = "J3" + bname
+        sbWnameS = sbWname + "S"
+        #uncName = "yWtt" + sbWnameS
+        #if not uncName in self.c.uncertainties:
+        if sbWnameS:
+            #
+            # anticorrelated W/tt yields from fit (translated from low dphi region)
+            #   use errors on fraction (total normalization is included in Poisson error of bin)
+            #
+            sbWres = self.subDict(self.bkgres,self.sbBins[sbWname])
+            ys = [ sbWres["yW_crNJet_0b_lowDPhi"], sbWres["yTT_crNJet_0b_lowDPhi"], sbWres["yRest_crNJet_0b_lowDPhi_truth"] ]
+            vys = [ sbWres["yW_Var_crNJet_0b_lowDPhi"], sbWres["yTT_Var_crNJet_0b_lowDPhi"], sbWres["yRest_Var_crNJet_0b_lowDPhi_truth"] ]
+            fracErrs = relErrorsOnFractions(ys,vys)
+            #self.c.addUncertainty(uncName,"lnN",group="yWtt")
+            #self.c.specifyUncertainty(uncName,sbWnameS,"W",1.+fracErrs[0])
+            #self.c.specifyUncertainty(uncName,sbWnameS,"tt",1.-fracErrs[1])
+        # !*! need to change from error on yield to error on fraction since total normalization fluctuation
+        #     already accounted for!!!
+        # !*! should be correlated between MB SR and CR
+        #
+        ys = [ mbres["yW_srNJet_0b_lowDPhi"], mbres["yTT_srNJet_0b_lowDPhi"], \
+                   mbres["yRest_srNJet_0b_lowDPhi_truth"],  mbres["yQCD_srNJet_0b_lowDPhi"] ]
+        # temporary fix for QCD variance 
+        vQCD = mbres["yQCD_Var_srNJet_0b_lowDPhi"]
+        if isnan(vQCD):
+            print "Replacing nan for yQCD_Var_srNJet_0b_lowDPhi in ",mbnameC
+            vQCD =  mbres["yQCD_srNJet_0b_lowDPhi"]**2
+        vys = [ mbres["yW_Var_srNJet_0b_lowDPhi"], mbres["yTT_Var_srNJet_0b_lowDPhi"], \
+                   mbres["yRest_Var_srNJet_0b_lowDPhi_truth"],  vQCD ]
+        fracErrs = relErrorsOnFractions(ys,vys)
+        # fracErrs = [ ]
+        # fracErrs.append(sqrt(mbres["yW_Var_srNJet_0b_lowDPhi"])/mbres["yW_srNJet_0b_lowDPhi"])
+        # fracErrs.append(sqrt(mbres["yTT_Var_srNJet_0b_lowDPhi"])/mbres["yTT_srNJet_0b_lowDPhi"])
+        #uncName = "yWtt" + mbnameC
+        #self.c.addUncertainty(uncName,"lnN",group="yWtt")
+        #self.c.specifyUncertainty(uncName,mbnameC,"W",1.+fracErrs[0])
+        #self.c.specifyUncertainty(uncName,mbnameC,"tt",1.-fracErrs[1])
+        assert not mbname in self.yWtts
+        ytt = mbres["yTT_srNJet_0b_lowDPhi"]
+        yW = mbres["yW_srNJet_0b_lowDPhi"]
+        self.yWtts[mbname] = { "W" : yW, \
+                               "tt" : ytt, \
+                               "eW" : fracErrs[0], "ett" : -fracErrs[1] }
+        # self.c.specifyUncertainty(uncName,mbnameS,"W",1.+fracErrs[0])
+        # self.c.specifyUncertainty(uncName,mbnameS,"tt",1.-fracErrs[1])
+
 
       for mbname in mbBinNames:
         mbres = self.subDict(self.bkgres,self.mbBins[mbname])
@@ -278,6 +347,8 @@ class CalcSingleLimit:
         yW = mbres["yW_srNJet_0b_"+rDPhi]
         #self.rateParamLines.append(self.rateParamValueLine(mbnameC,"tt",ytt))
         #self.rateParamLines.append(self.rateParamValueLine(mbnameC,"W",yW))
+        self.paramLines.append(self.crFormulaLine(mbname,sbname,"tt",self.yWtts[mbname]))
+        self.paramLines.append(self.crFormulaLine(mbname,sbname,"W",self.yWtts[mbname]))
         assert not mbnameC in self.yieldstt
         self.yieldstt[mbnameC] = ytt
         assert not mbnameC in self.yieldsW
@@ -342,58 +413,6 @@ class CalcSingleLimit:
           # apply small correction to 50% cross section for TTV fraction (to be scaled by 100%)
           self.c.specifyUncertainty("xsecOther",mbname,"other",1.55)
       #
-      # (anti-)correlations from fitted W/tt yields
-      #
-      for mbname in mbBinNames:
-        bname = mbname[2:]
-        mbnameC = mbname + "C"
-        mbnameS = mbname + "S"
-        mbres = self.subDict(self.bkgres,self.mbBins[mbname])
-        # mbsigres = self.subDict(self.sigres,self.mbBins[mbname])
-
-        sbWname = "J3" + bname
-        sbWnameS = sbWname + "S"
-        #uncName = "yWtt" + sbWnameS
-        #if not uncName in self.c.uncertainties:
-        if sbWnameS:
-            #
-            # anticorrelated W/tt yields from fit (translated from low dphi region)
-            #   use errors on fraction (total normalization is included in Poisson error of bin)
-            #
-            sbWres = self.subDict(self.bkgres,self.sbBins[sbWname])
-            ys = [ sbWres["yW_crNJet_0b_lowDPhi"], sbWres["yTT_crNJet_0b_lowDPhi"], sbWres["yRest_crNJet_0b_lowDPhi_truth"] ]
-            vys = [ sbWres["yW_Var_crNJet_0b_lowDPhi"], sbWres["yTT_Var_crNJet_0b_lowDPhi"], sbWres["yRest_Var_crNJet_0b_lowDPhi_truth"] ]
-            fracErrs = relErrorsOnFractions(ys,vys)
-            #self.c.addUncertainty(uncName,"lnN",group="yWtt")
-            #self.c.specifyUncertainty(uncName,sbWnameS,"W",1.+fracErrs[0])
-            #self.c.specifyUncertainty(uncName,sbWnameS,"tt",1.-fracErrs[1])
-        # !*! need to change from error on yield to error on fraction since total normalization fluctuation
-        #     already accounted for!!!
-        # !*! should be correlated between MB SR and CR
-        #
-        ys = [ mbres["yW_srNJet_0b_lowDPhi"], mbres["yTT_srNJet_0b_lowDPhi"], \
-                   mbres["yRest_srNJet_0b_lowDPhi_truth"],  mbres["yQCD_srNJet_0b_lowDPhi"] ]
-        # temporary fix for QCD variance 
-        vQCD = mbres["yQCD_Var_srNJet_0b_lowDPhi"]
-        if isnan(vQCD):
-            print "Replacing nan for yQCD_Var_srNJet_0b_lowDPhi in ",mbnameC
-            vQCD =  mbres["yQCD_srNJet_0b_lowDPhi"]**2
-        vys = [ mbres["yW_Var_srNJet_0b_lowDPhi"], mbres["yTT_Var_srNJet_0b_lowDPhi"], \
-                   mbres["yRest_Var_srNJet_0b_lowDPhi_truth"],  vQCD ]
-        fracErrs = relErrorsOnFractions(ys,vys)
-        #uncName = "yWtt" + mbnameC
-        #self.c.addUncertainty(uncName,"lnN",group="yWtt")
-        #self.c.specifyUncertainty(uncName,mbnameC,"W",1.+fracErrs[0])
-        #self.c.specifyUncertainty(uncName,mbnameC,"tt",1.-fracErrs[1])
-        assert not mbname in self.yWtts
-        ytt = mbres["yTT_srNJet_0b_lowDPhi"]
-        yW = mbres["yW_srNJet_0b_lowDPhi"]
-        self.yWtts[mbname] = { "W" : yW, \
-                               "tt" : ytt, \
-                               "eW" : fracErrs[0], "ett" : -fracErrs[1] }
-        # self.c.specifyUncertainty(uncName,mbnameS,"W",1.+fracErrs[0])
-        # self.c.specifyUncertainty(uncName,mbnameS,"tt",1.-fracErrs[1])
-      #
       # correlations between MB/SR and MB/CR or SB/SR
       #
       for mbname in mbBinNames:
@@ -424,8 +443,8 @@ class CalcSingleLimit:
         # kappaW = (self.yieldsW[mbnameS]/self.yieldsW[mbnameC])/(self.yieldsW["J3"+bname+"S"]/self.yieldsW["J3"+bname+"C"])
         kappaW = mbres["W_kappa"]
         self.paramLines.append(self.paramValueLine(mbnameS,"W",kappaW))
-        # self.rateParamLines.append(self.rateParamFormulaLine(mbname,"J3"+bname,"W"))
-        self.rateParamLines.append(self.rateParamFormulaLine(mbname,"J3"+bname,"W",self.yWtts[mbname]))
+        # self.rateParamLines.append(self.srFormulaLine(mbname,"J3"+bname,"W"))
+        self.rateParamLines.append(self.srFormulaLine(mbname,"J3"+bname,"W"))
         self.paramLines.append(self.paramValueLine1("yWtt"+mbname,0.,1.))
         #
         # correlation tt regions: D and F / E and F
@@ -441,8 +460,8 @@ class CalcSingleLimit:
         # kappatt = (self.yieldstt[mbnameS]/self.yieldstt[mbnameC])/(self.yieldstt["J4"+bname+"S"]/self.yieldstt["J4"+bname+"C"])
         kappatt = mbres["TT_kappa"]*mbres["TT_rCS_fits_MC"]["k_0b/1b_btag"]
         self.paramLines.append(self.paramValueLine(mbnameS,"tt",kappatt))
-        # self.rateParamLines.append(self.rateParamFormulaLine(mbname,"J4"+bname,"tt"))
-        self.rateParamLines.append(self.rateParamFormulaLine(mbname,"J4"+bname,"tt",self.yWtts[mbname]))
+        # self.rateParamLines.append(self.srFormulaLine(mbname,"J4"+bname,"tt"))
+        self.rateParamLines.append(self.srFormulaLine(mbname,"J4"+bname,"tt"))
 
       #
       # other systematics on (total) prediction in MB/SR
