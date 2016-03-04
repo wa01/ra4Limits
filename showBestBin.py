@@ -28,10 +28,10 @@ def rangeToText(name,rng):
     return result
 
 def binToName(bdef):
-    jets = bdef[0]
-    result = rangeToText("n_{jet}",bdef[0])
-    result += ", "
-    result += rangeToText("L_{T}",bdef[1])
+#    jets = bdef[0]
+#    result = rangeToText("n_{jet}",bdef[0])
+#    result += ", "
+    result = rangeToText("L_{T}",bdef[1])
     result += ", "
     result += rangeToText("H_{T}",bdef[2])
     return result
@@ -82,6 +82,8 @@ dmlsp = mlspMax - mlspMin
 
 cnv = ROOT.TCanvas("cnv","cnv",900,800)
 frame = cnv.DrawFrame(mgluMin-0.05*dmglu,0.,mgluMax+0.05*dmglu,mlspMax+0.05*dmlsp)
+frame.GetXaxis().SetTitle("m_{#tilde{g}} [GeV]")
+frame.GetYaxis().SetTitle("m_{#tilde{#chi_{1}^{0}}} [GeV]")
 cnv.Update()
 
 text = ROOT.TLatex()
@@ -92,24 +94,36 @@ for ibin in range(13):
     markers.append(ROOT.TMarker())
     markers[-1].SetMarkerSize(1.75)
 
-leg = ROOT.TLegend(0.15,0.55,0.50,0.90)
+leg = ROOT.TLegend(0.165,0.61,0.55,0.93)
 leg.SetBorderSize(0)
 leg.SetFillStyle(0)
 leg.SetMargin(0.1)
+leg.SetEntrySeparation(-0.4)
 
+nj = binDefs[0][0]
+leg.AddEntry(0,rangeToText("n_{jet}",nj),"")
 ics = [ ROOT.kGreen, ROOT.kGreen+1, ROOT.kGreen+2, ROOT.kGreen-7, ROOT.kGreen-9, ROOT.kGreen+4 ]
 for ibin in range(3):
+    assert nj==binDefs[ibin][0]
     markers[ibin].SetMarkerStyle(21)
     markers[ibin].SetMarkerColor(ics.pop())
 #    leg.AddEntry(markers[ibin],"Bin"+str(ibin),"P")
     leg.AddEntry(markers[ibin],binToName(binDefs[ibin]),"P")
+
+nj = binDefs[3][0]
+leg.AddEntry(0,rangeToText("n_{jet}",nj),"")
 ics = [ ROOT.kBlue, ROOT.kBlue+1, ROOT.kBlue+2, ROOT.kBlue-7, ROOT.kBlue-9, ROOT.kBlue+4 ]
 for ibin in range(3,9):
+    assert nj==binDefs[ibin][0]
     markers[ibin].SetMarkerStyle(21)
     markers[ibin].SetMarkerColor(ics.pop())
     leg.AddEntry(markers[ibin],binToName(binDefs[ibin]),"P")
+
+nj = binDefs[9][0]
+leg.AddEntry(0,rangeToText("n_{jet}",nj),"")
 ics = [ ROOT.kRed, ROOT.kRed+1, ROOT.kRed+2, ROOT.kRed-7, ROOT.kRed-9, ROOT.kRed+4 ]
 for ibin in range(9,13):
+    assert nj==binDefs[ibin][0]
     markers[ibin].SetMarkerStyle(21)
     markers[ibin].SetMarkerColor(ics.pop())
     leg.AddEntry(markers[ibin],binToName(binDefs[ibin]),"P")
@@ -131,5 +145,5 @@ for mg in expLimits:
             text.DrawLatex(xp,yp,str(ibmin))
 leg.Draw()
 cnv.Update()
-
-                
+cnv.SaveAs("ZeroBBestBin.pdf")
+cnv.SaveAs("ZeroBBestBin.png")
