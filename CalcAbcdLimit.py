@@ -244,6 +244,10 @@ class CalcSingleLimit:
               self.c.specifyExpectation(sbname+r,"tt",sbres["yTT_crNJet_0b_"+rDPhi])
               self.c.specifyExpectation(sbname+r,"other",sbres["yRest_crNJet_0b_"+rDPhi+"_truth"])
               self.c.specifyExpectation(sbname+r,"QCD",0.001) # QCD is neglected in yield
+              if r=="C":
+                  self.c.addUncertainty("tt"+sbname,"lnN",group="yWtt")
+              self.c.specifyUncertainty("tt"+sbname,sbname+r,"tt",relErrForLimit(sbres["yTT_crNJet_0b_"+rDPhi],
+                                                                                 sbres["yTT_Var_crNJet_0b_"+rDPhi]))
             #
             # define tt sideband
             # 
