@@ -394,20 +394,27 @@ class CalcSingleLimit:
       self.c.addUncertainty("lumi","lnN")
       self.c.addUncertainty("xsecOther","lnN",group="xsec")
       self.c.addUncertainty("xsecsFit","lnN",group="xsec")
-      # self.c.addUncertainty("trigger","lnN")
+      self.c.addUncertainty("trigger","lnN")
       # self.c.addUncertainty("scales","lnN")
+      self.c.addUncertainty("isr","lnN")
       for bname in sbBinNames:
         sbname = bname + "S"
         sbsigres = self.subDict(self.sigres,self.sbBins[bname])["signals"][self.mglu][self.mlsp]
         self.c.specifyUncertainty("lumi",sbname,"signal",1.+sbsigres["syst_lumi"])
 #        self.c.specifyUncertainty("sigSyst",sbname,"signal",1.20) # to be corrected!
-        self.c.specifyUncertainty("lumi",sbname,"other",1.+sbsigres["syst_lumi"])
-        # self.c.specifyUncertainty("trigger",sbname,"signal",1.+sbsigres["syst_trigger"])
+#        self.c.specifyUncertainty("lumi",sbname,"other",1.+sbsigres["syst_lumi"])
+        self.c.specifyUncertainty("trigger",sbname,"signal",1.+sbsigres["syst_trigger"])
+        self.c.specifyUncertainty("isr",sbname,"signal",1+sbsigres["syst_ISR"])
         # self.c.specifyUncertainty("scales",sbname,"signal",1.+sbsigres["syst_Q2"])
         # apply small correction to 50% cross section for TTV fraction (to be scaled by 100%)
         self.c.specifyUncertainty("xsecOther",sbname,"other",1.55)
       for bname in sbBinNames:
         sbname = bname + "C"
+        sbsigres = self.subDict(self.sigres,self.sbBins[bname])["signals"][self.mglu][self.mlsp]
+        self.c.specifyUncertainty("lumi",sbname,"signal",1.+sbsigres["syst_lumi"])
+        self.c.specifyUncertainty("trigger",sbname,"signal",1.+sbsigres["syst_trigger"])
+        self.c.specifyUncertainty("isr",sbname,"signal",1+sbsigres["syst_ISR"])
+        self.c.specifyUncertainty("xsecOther",sbname,"other",1.55)
         sbres = self.subDict(self.bkgres,self.sbBins[bname])
         xwtt = sbres["yW_crNJet_0b_lowDPhi"] + sbres["yTT_crNJet_0b_lowDPhi"]
         xoth = self.c.expectation[(sbname,"other")] + self.c.expectation[(sbname,"QCD")]
@@ -420,8 +427,9 @@ class CalcSingleLimit:
           self.c.specifyUncertainty("lumi",mbname,"signal",1.+mbsigres["syst_lumi"])
 #          self.c.specifyUncertainty("sigSyst",mbname,"signal",1.20) # to be corrected!
           self.c.specifyUncertainty("lumi",mbname,"other",1.+mbsigres["syst_lumi"])
-          # self.c.specifyUncertainty("trigger",mbname,"signal",1.+mbsigres["syst_trigger"])
+          self.c.specifyUncertainty("trigger",mbname,"signal",1.+mbsigres["syst_trigger"])
           # self.c.specifyUncertainty("scales",mbname,"signal",1.+mbsigres["syst_Q2"])
+          self.c.specifyUncertainty("isr",mbname,"signal",1+mbsigres["syst_ISR"])
           # apply small correction to 50% cross section for TTV fraction (to be scaled by 100%)
           self.c.specifyUncertainty("xsecOther",mbname,"other",1.55)
           if r=="C":
@@ -593,11 +601,11 @@ class CalcSingleLimit:
                                           1+mbsigres["stat_err_MB_SR"]/mbsigres["yield_MB_SR"])
         else:
             self.c.specifyUncertainty(uncName,mbnameS,"signal",1.20)
-        # trigger uncertainty on signal efficiency
-        uncName = "trigger"
-        if not "trigger" in self.c.uncertainties:
-            self.c.addUncertainty("trigger","lnN")
-        self.c.specifyUncertainty("trigger",mbnameS,"signal",1.+mbsigres["syst_trigger"])
+        ## trigger uncertainty on signal efficiency
+        #uncName = "trigger"
+        #if not "trigger" in self.c.uncertainties:
+        #    self.c.addUncertainty("trigger","lnN")
+        #self.c.specifyUncertainty("trigger",mbnameS,"signal",1.+mbsigres["syst_trigger"])
         # scale uncertainty on signal efficiency
         uncName = "scale"
         if not "scale" in self.c.uncertainties:
