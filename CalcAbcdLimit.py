@@ -389,6 +389,7 @@ class CalcSingleLimit:
       # self.c.addUncertainty("worst","lnN")
       self.c.addUncertainty("lumi","lnN")
       self.c.addUncertainty("xsecOther","lnN",group="xsec")
+      self.c.addUncertainty("xsecsFit","lnN",group="xsec")
       # self.c.addUncertainty("trigger","lnN")
       # self.c.addUncertainty("scales","lnN")
       for bname in sbBinNames:
@@ -401,6 +402,13 @@ class CalcSingleLimit:
         # self.c.specifyUncertainty("scales",sbname,"signal",1.+sbsigres["syst_Q2"])
         # apply small correction to 50% cross section for TTV fraction (to be scaled by 100%)
         self.c.specifyUncertainty("xsecOther",sbname,"other",1.55)
+      for bname in sbBinNames:
+        sbname = bname + "C"
+        sbres = self.subDict(self.bkgres,self.sbBins[bname])
+        xwtt = sbres["yW_crNJet_0b_lowDPhi"] + sbres["yTT_crNJet_0b_lowDPhi"]
+        xoth = self.c.expectation[(sbname,"other")] + self.c.expectation[(sbname,"QCD")]
+        self.c.specifyUncertainty("xsecsFit",sbname,"W",1.+xoth/(xwtt+xoth))
+        self.c.specifyUncertainty("xsecsFit",sbname,"tt",1.+xoth/(xwtt+xoth))
       for bname in mbBinNames:
         for r in [ "C", "S" ]:
           mbname = bname + r
@@ -412,6 +420,14 @@ class CalcSingleLimit:
           # self.c.specifyUncertainty("scales",mbname,"signal",1.+mbsigres["syst_Q2"])
           # apply small correction to 50% cross section for TTV fraction (to be scaled by 100%)
           self.c.specifyUncertainty("xsecOther",mbname,"other",1.55)
+          if r=="C":
+              mbres = self.subDict(self.bkgres,self.mbBins[bname])
+              xwtt = mbres["yW_srNJet_0b_lowDPhi"] + mbres["yTT_srNJet_0b_lowDPhi"]
+              xoth = self.c.expectation[(mbname,"other")] + self.c.expectation[(mbname,"QCD")]
+              self.c.specifyUncertainty("xsecsFit",mbname,"W",1.+xoth/(xwtt+xoth))
+              self.c.specifyUncertainty("xsecsFit",mbname,"tt",1.+xoth/(xwtt+xoth))
+              
+                                                        
       #
       # correlations between MB/SR and MB/CR or SB/SR
       #
