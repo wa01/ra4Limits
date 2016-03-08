@@ -38,7 +38,7 @@ OBSERVED $limFile graph_smoothed_Obs graph_smoothed_ObsP graph_smoothed_ObsM kBl
 # Preliminary Simulation or leave empty
 PRELIMINARY Preliminary
 # Lumi in fb 
-LUMI 2.2
+LUMI 2.3
 # Beam energy in TeV
 ENERGY 13
 
