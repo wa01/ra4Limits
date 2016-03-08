@@ -112,7 +112,10 @@ for mg in results:
         pmy = float(ml)
 
         pxsec = gluino13TeV_NLONLL[mg]
-        pobs = results[mg][ml]['-1.000']
+        kobs = '-1.000'
+        if not '-1.000' in results[mg][ml]:
+            kobs = '0.500'
+        pobs = results[mg][ml][kobs]
         pobsup = pobs * pxsec/gluino13TeV_NLONLL_Up[mg]
         pobsdown = pobs * pxsec/gluino13TeV_NLONLL_Down[mg]
         pexp = results[mg][ml]['0.500']
@@ -138,6 +141,7 @@ for mg in results:
         vup.append(pup)
         vdown.append(pdown)
 
+print len(vmx)
 assert len(vmx) > 2
 assert not ( len(vmx) != len(vmy) \
                  or len(vmx) != len(vxsec) \
@@ -218,7 +222,15 @@ if len(args)>1:
 
 if len(args)>1:
     tfile = ROOT.TFile(args[1]+".root","recreate")
-    hlim.Write("hXsec_exp_corr")
+    hlim1 = ROOT.TH2F("hlim1","hlim1", \
+                          hlim.GetNbinsX(),hlim.GetXaxis().GetXmin(),hlim.GetXaxis().GetXmax(),
+                          hlim.GetNbinsY(),hlim.GetYaxis().GetXmin(),hlim.GetYaxis().GetXmax())
+    for ix in range(hlim.GetNbinsX()):
+        for iy in range(hlim.GetNbinsY()):
+            v = hlim.GetBinContent(ix+1,iy+1)
+            if v>1.e-10:
+                hlim1.SetBinContent(ix+1,iy+1,v)
+    hlim1.Write("hXsec_exp_corr")
     cobs.Write("graph_smoothed_Obs")
     cobsup.Write("graph_smoothed_ObsP")
     cobsdown.Write("graph_smoothed_ObsM")
