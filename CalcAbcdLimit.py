@@ -400,7 +400,8 @@ class CalcSingleLimit:
       for bname in sbBinNames:
         sbname = bname + "S"
         sbsigres = self.subDict(self.sigres,self.sbBins[bname])["signals"][self.mglu][self.mlsp]
-        self.c.specifyUncertainty("lumi",sbname,"signal",1.+sbsigres["syst_lumi"])
+        # self.c.specifyUncertainty("lumi",sbname,"signal",1.+sbsigres["syst_lumi"])
+        self.c.specifyUncertainty("lumi",sbname,"signal",1.027)
 #        self.c.specifyUncertainty("sigSyst",sbname,"signal",1.20) # to be corrected!
 #        self.c.specifyUncertainty("lumi",sbname,"other",1.+sbsigres["syst_lumi"])
         self.c.specifyUncertainty("trigger",sbname,"signal",1.+sbsigres["syst_trigger"])
@@ -411,7 +412,8 @@ class CalcSingleLimit:
       for bname in sbBinNames:
         sbname = bname + "C"
         sbsigres = self.subDict(self.sigres,self.sbBins[bname])["signals"][self.mglu][self.mlsp]
-        self.c.specifyUncertainty("lumi",sbname,"signal",1.+sbsigres["syst_lumi"])
+        # self.c.specifyUncertainty("lumi",sbname,"signal",1.+sbsigres["syst_lumi"])
+        self.c.specifyUncertainty("lumi",sbname,"signal",1.027)
         self.c.specifyUncertainty("trigger",sbname,"signal",1.+sbsigres["syst_trigger"])
         self.c.specifyUncertainty("isr",sbname,"signal",1+sbsigres["syst_ISR"])
         self.c.specifyUncertainty("xsecOther",sbname,"other",1.55)
@@ -424,9 +426,11 @@ class CalcSingleLimit:
         for r in [ "C", "S" ]:
           mbname = bname + r
           mbsigres = self.subDict(self.sigres,self.mbBins[bname])["signals"][self.mglu][self.mlsp]
-          self.c.specifyUncertainty("lumi",mbname,"signal",1.+mbsigres["syst_lumi"])
+          # self.c.specifyUncertainty("lumi",mbname,"signal",1.+mbsigres["syst_lumi"])
+          self.c.specifyUncertainty("lumi",mbname,"signal",1.027)
 #          self.c.specifyUncertainty("sigSyst",mbname,"signal",1.20) # to be corrected!
-          self.c.specifyUncertainty("lumi",mbname,"other",1.+mbsigres["syst_lumi"])
+          # self.c.specifyUncertainty("lumi",mbname,"other",1.+mbsigres["syst_lumi"])
+          self.c.specifyUncertainty("lumi",mbname,"other",1.027)
           self.c.specifyUncertainty("trigger",mbname,"signal",1.+mbsigres["syst_trigger"])
           # self.c.specifyUncertainty("scales",mbname,"signal",1.+mbsigres["syst_Q2"])
           self.c.specifyUncertainty("isr",mbname,"signal",1+mbsigres["syst_ISR"])
