@@ -87,6 +87,22 @@ class CalcSingleLimit:
                   break
       print "Using mb bins ",mbBinNames
       print "Using sb bins ",sbBinNames
+      bkgerrs = { }
+      bkgerrs['J5L1H3D2'] = 2.74
+      bkgerrs[ 'J5L2H3D2'] = 2.13
+      bkgerrs[ 'J5L3H3D2'] = 2.03
+      bkgerrs[ 'J6L1H1D2'] = 1.25
+      bkgerrs[ 'J6L1H4D2'] = 1.47
+      bkgerrs[ 'J6L2H1D2'] = 1.12
+      bkgerrs[ 'J6L2H4D2'] = 0.72
+      bkgerrs[ 'J6L3H2D1'] = 0.90
+      bkgerrs[ 'J6L3H5D1'] = 1.03
+      bkgerrs[ 'J8L1H1D2'] = 0.20
+      bkgerrs[ 'J8L1H4D2'] = 0.50
+      bkgerrs[ 'J8L2H3D1'] = 0.24
+      bkgerrs[ 'J8L3H3D1'] = 0.23
+
+
       #
       # scale signal cross section for low masses
       #
@@ -224,6 +240,15 @@ class CalcSingleLimit:
         self.c.specifyUncertainty("WPol",mbnameS,"W",1.+mbres["systematics"]["Wpol"])
         self.c.specifyUncertainty("WPol",mbnameS,"tt",1.+mbres["systematics"]["Wpol"])
         self.c.specifyUncertainty("WPol",mbnameS,"other",1.+mbres["systematics"]["Wpol"])
+        # 
+        uncName = "wStat" + mbnameS
+        self.c.addUncertainty(uncName,"lnN",group="stat")
+        self.c.specifyUncertainty(uncName,mbnameS,"W",
+                                  1+mbres["W_pred_final_err"]/mbres["W_pred_final"])
+        uncName = "ttStat" + mbnameS
+        self.c.addUncertainty(uncName,"lnN",group="stat")
+        self.c.specifyUncertainty(uncName,mbnameS,"tt",
+                                  1+mbres["TT_pred_final_err"]/mbres["TT_pred_final"])
         # stat. uncertainty on signal efficiency
         uncName = "statSeff" + mbnameS
         self.c.addUncertainty(uncName,"lnN",group="statSeff")
@@ -266,11 +291,9 @@ class CalcSingleLimit:
       #
       for mbname in mbBinNames:
           mbnameS = mbname + "S"
-          print "Bin ",mbnameS
           totobs = 0.
           totsig = 0.
           totbkg = 0.
-          print self.c.observation.keys()
           totobs = self.c.observation[mbnameS]
           bkgexps = { }
           for k in self.c.expectation:
@@ -291,19 +314,27 @@ class CalcSingleLimit:
           cov *= 0
           for i,p in enumerate(bkgnames):
               vec[i] = bkgexps[p]
+              print i,vec[i]
           for c in self.c.uncertainties:
               for i,p in enumerate(bkgnames):
                   key = (c,mbnameS,p)
                   if key in self.c.uncertaintyVal:
-                      cov[i][i] = (1-self.c.uncertaintyVal[key])**2
+                      cov[i][i] += (1-self.c.uncertaintyVal[key])**2
+                      print "{0:15s} {1:10s} {2:5s} {3:5.3f}".format(c,mbnameS,p,(1-self.c.uncertaintyVal[key]))
+#                  else:
+#                      print "No such key {0:15s} {1:10s} {2:5s}".format(c,mbnameS,p)
           for i in range(nbkg):
               for j in range(nbkg):
                   if i!=j:
                       vi = cov[i][i]
                       vj = cov[j][j]
                       cov[i][j] = sqrt(vi*vj)
+          for i in range(nbkg):
+              print i,bkgnames[i],sqrt(cov[i][i])
           toterr = sqrt(cov.Similarity(vec))
-          print "  obs, sig, bkg = {0:5d} {1:6.2f} {2:6.2f} +- {3:5.2f}".format(totobs,totsig,totbkg,toterr)
+          line = "Bin {0:10s}:".format(mbnameS)
+          line += "  obs, sig, bkg = {0:5d} {1:6.2f} {2:6.2f} +- {3:5.2f}".format(totobs,totsig,totbkg,toterr)
+          print line
                   
                       
       #
