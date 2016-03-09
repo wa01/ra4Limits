@@ -314,23 +314,32 @@ class CalcSingleLimit:
           cov *= 0
           for i,p in enumerate(bkgnames):
               vec[i] = bkgexps[p]
-              print i,vec[i]
+#              print i,vec[i]
           for c in self.c.uncertainties:
+              covc = ROOT.TMatrixDSym(nbkg)
+              covc *= 0
               for i,p in enumerate(bkgnames):
                   key = (c,mbnameS,p)
                   if key in self.c.uncertaintyVal:
-                      cov[i][i] += (1-self.c.uncertaintyVal[key])**2
-                      print "{0:15s} {1:10s} {2:5s} {3:5.3f}".format(c,mbnameS,p,(1-self.c.uncertaintyVal[key]))
+                      covc[i][i] += (1-self.c.uncertaintyVal[key])**2
+#                      print "{0:15s} {1:10s} {2:5s} {3:5.3f}".format(c,mbnameS,p,(1-self.c.uncertaintyVal[key]))
 #                  else:
 #                      print "No such key {0:15s} {1:10s} {2:5s}".format(c,mbnameS,p)
-          for i in range(nbkg):
-              for j in range(nbkg):
-                  if i!=j:
-                      vi = cov[i][i]
-                      vj = cov[j][j]
-                      cov[i][j] = sqrt(vi*vj)
-          for i in range(nbkg):
-              print i,bkgnames[i],sqrt(cov[i][i])
+              for i in range(nbkg):
+                  for j in range(nbkg):
+                      if i!=j:
+                          vi = covc[i][i]
+                          vj = covc[j][j]
+                          covc[i][j] = sqrt(vi*vj)
+              cov += covc
+#          for i in range(nbkg):
+#              for j in range(nbkg):
+#                  if i!=j:
+#                      vi = cov[i][i]
+#                      vj = cov[j][j]
+#                      cov[i][j] = sqrt(vi*vj)
+#          for i in range(nbkg):
+#              print i,bkgnames[i],sqrt(cov[i][i])
           toterr = sqrt(cov.Similarity(vec))
           line = "Bin {0:10s}:".format(mbnameS)
           line += "  obs, sig, bkg = {0:5d} {1:6.2f} {2:6.2f} +- {3:5.2f}".format(totobs,totsig,totbkg,toterr)
